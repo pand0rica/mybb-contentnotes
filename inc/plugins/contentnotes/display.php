@@ -27,16 +27,23 @@ function contentnotes_load_lang(): void
 }
 
 /**
- * Hook global_intermediate: bindet das Script ein und stellt dem Editor die Kategorien bereit.
+ * Hook pre_output_page: bindet das Script ein und stellt dem Editor die Kategorien bereit.
  *
- * @return void
+ * Bewusst am Ausgabe-Hook statt an global_intermediate: $headerinclude wird in global.php erst
+ * nach global_intermediate aus dem Template gebaut, ein Anhängen dort ginge verloren.
+ *
+ * @param string $contents Fertige HTML-Seite
+ * @return string
  */
-function contentnotes_handle_headerinclude(): void
+function contentnotes_handle_output($contents)
 {
-    global $mybb, $headerinclude, $lang;
+    global $mybb, $lang;
 
-    if (!contentnotes_is_enabled()) {
-        return;
+    if (!is_string($contents) || !contentnotes_is_enabled() || strpos($contents, '</head>') === false) {
+        return $contents;
+    }
+    if (strpos($contents, '/jscripts/contentnotes.js') !== false) {
+        return $contents; // schon eingebunden
     }
 
     contentnotes_load_lang();
@@ -68,8 +75,11 @@ function contentnotes_handle_headerinclude(): void
             . ";</script>\n";
     }
 
-    $headerinclude .= "\n" . $config
+    $block = $config
         . '<script type="text/javascript" src="' . $base . '/jscripts/contentnotes.js?ver=' . $version . '"></script>' . "\n";
+
+    // Vor dem ersten </head> einfügen (hinter jQuery und den Core-Scripts)
+    return substr_replace($contents, $block, (int)stripos($contents, '</head>'), 0);
 }
 
 /**

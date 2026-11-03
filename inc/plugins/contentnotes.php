@@ -33,8 +33,8 @@ if (defined('IN_ADMINCP')) {
     // Sprachdatei für die Admin-Log-Zeilen (admin_log_config_contentnotes_*)
     $plugins->add_hook('admin_tools_adminlog_begin', 'contentnotes_admin_load_lang');
 } else {
-    // Header: Script + Konfiguration
-    $plugins->add_hook('global_intermediate', 'contentnotes_handle_headerinclude');
+    // Seitenausgabe: Script + Editor-Konfiguration vor </head> einfügen
+    $plugins->add_hook('pre_output_page', 'contentnotes_handle_output');
 
     // Formulare (Thread / Antwort / Bearbeiten)
     $plugins->add_hook('newthread_start', 'contentnotes_handle_newthread_form');

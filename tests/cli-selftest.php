@@ -350,6 +350,18 @@ check_true('ohne Kürzel ⇒ generisch', strpos($out, '&#9888; Content note') !=
 $out = contentnotes_parse_inline('[CW=GEWALT]groß[/CW]');
 check_true('Groß-/Kleinschreibung egal', strpos($out, 'data-cw="gewalt"') !== false && strpos($out, '&#9888; Gewalt') !== false);
 
+$out = contentnotes_parse_inline('[cw="gewalt|mit Leerzeichen"]x[/cw]');
+check_true('Anführungszeichen-Form (so schreibt der Editor zurück)', strpos($out, 'data-cw="gewalt"') !== false && strpos($out, 'Gewalt &lt;b&gt;: mit Leerzeichen') !== false && strpos($out, '[cw') === false);
+
+$out = contentnotes_parse_inline('[cw=&quot;gewalt|mit &amp; und \\&quot;q\\&quot;&quot;]x[/cw]');
+check_true('Anführungszeichen-Form nach HTML-Escaping des Parsers, \\" wird aufgelöst', strpos($out, 'data-cw="gewalt"') !== false && strpos($out, 'mit &amp; und &quot;q&quot;</span>') !== false, $out);
+
+$out = contentnotes_parse_inline('[cw="gewalt|a ] b"]x[/cw]');
+check_true('Anführungszeichen-Form darf ] enthalten', strpos($out, 'a ] b') !== false && strpos($out, 'data-cw="gewalt"') !== false, $out);
+
+$out = contentnotes_parse_inline('[cw=Gewalt in Szene 3]x[/cw]');
+check_true('ungültiges Kürzel ⇒ generisch, Text wird zum Hinweis', strpos($out, '&#9888; Content note: Gewalt in Szene 3') !== false && strpos($out, 'data-cw') === false, $out);
+
 $out = contentnotes_parse_inline('[cw=gewalt|<script>alert(1)</script>x" onmouseover="y]t[/cw]');
 check_true('Hinweis: kein <script>, kein ausbrechendes Attribut', strpos($out, '<script') === false && strpos($out, '" onmouseover') === false);
 

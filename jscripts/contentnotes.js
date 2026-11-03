@@ -123,6 +123,7 @@
 				}
 			},
 			isInline: true,
+			allowsEmpty: true,
 			format: function (element, content) {
 				var slug = $(element).attr('data-cw') || '';
 				var note = $(element).attr('data-cwnote') || '';

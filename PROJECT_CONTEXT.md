@@ -45,7 +45,9 @@ anklickbare Warnung sehen oder den Inhalt direkt ohne Warnung angezeigt bekommen
 2. **Post** (Antwort, Quick-Reply, Bearbeiten eines Nicht-Erst-Posts):
    - Die Nachricht wird im Postbit durch einen Warnkopf (Kategorien + Freitexte + Button)
      ersetzt/verdeckt; Klick zeigt die Nachricht. Gleiche „mind. eine Kategorie"-Regel.
-3. **Textstelle** per MyCode `[cw=kuerzel]Text[/cw]` oder `[cw=kuerzel|Hinweis]Text[/cw]`:
+3. **Textstelle** per MyCode `[cw=kuerzel]Text[/cw]` oder `[cw=kuerzel|Hinweis]Text[/cw]` (auch in
+   Anführungszeichen: `[cw="kuerzel|Hinweis mit Leerzeichen"]` – so schreibt der SCEditor zurück, Anführungszeichen im
+   Text als `\"`; ein ungültiges Kürzel ergibt die allgemeine Inhaltswarnung, der ganze Text wird zum Hinweis):
    - Darstellung **inline**, ohne Block/Zeilenumbruch: kleines Label-Chip („⚠ Name: Hinweis")
      direkt vor dem verschwommenen Text (`filter: blur()`), der im Lesefluss seine Breite behält.
      Klick oder Enter/Leertaste auf Chip bzw. Text deckt auf (`aria-expanded`).
@@ -112,11 +114,11 @@ Alle `ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci` (Kit `conventi
 ## Hooks
 | Hook | Handler | Modul | Zweck |
 |---|---|---|---|
-| `global_intermediate` | `contentnotes_handle_headerinclude` | display | auf newthread/newreply/editpost/showthread: Kategorien-JSON (aktive) + Rechte-Flag + `jscripts/contentnotes.js` an `$headerinclude` anhängen |
+| `pre_output_page` | `contentnotes_handle_output` | display | `jscripts/contentnotes.js` (+ für berechtigte Mitglieder `contentnotes_config`: aktive Kategorien, Rechte-Flag, Texte) vor `</head>` einfügen. **Nicht** `global_intermediate`: `$headerinclude` wird in `global.php` erst danach gebaut, ein Anhängen ginge verloren |
 | `newthread_start` | `contentnotes_handle_newthread_form` | forms | `$contentnotes_form` (Thread) bauen |
 | `newreply_start` | `contentnotes_handle_newreply_form` | forms | `$contentnotes_form` (Post) bauen |
 | `editpost_end` | `contentnotes_handle_editpost_form` | forms | Formular, vorbelegt aus DB; erster Post ⇒ Thread-Notes |
-| `showthread_start` | `contentnotes_handle_showthread_start` | display | Thread-Notes laden, `$contentnotes_thread_banner`, `$contentnotes_posts_attr`, Quick-Reply-Formular `$contentnotes_quickreply` |
+| `showthread_start` | `contentnotes_handle_showthread_start` | display | Thread-Notes laden, `$contentnotes_thread_banner`, `$contentnotes_posts_attr`, Quick-Reply-Zeile `$contentnotes_quickreply` |
 | `datahandler_post_validate_thread` / `_post` | `contentnotes_handle_validate` | forms | Input prüfen (cid aktiv, Freitext ≤ 255), Fehler via `$this->set_error()` |
 | `datahandler_post_insert_thread_end` | `contentnotes_handle_insert_thread` | forms | Thread-Notes speichern (`return_values['tid']`) |
 | `datahandler_post_insert_post_end` | `contentnotes_handle_insert_post` | forms | Post-Notes speichern (`return_values['pid']`) |
@@ -140,19 +142,21 @@ Alle `ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci` (Kit `conventi
 | Core-Template | Anker | Einfügung |
 |---|---|---|
 | `newthread`, `newreply`, `editpost` | `{$posticons}` | `{$posticons}{$contentnotes_form}` |
-| `showthread_quickreply` | `{$option_signature}` | `{$option_signature}{$contentnotes_quickreply}` (innerhalb der Optionen-Zelle; Feldset kompakt) |
+| `showthread_quickreply` | `{$captcha}` | `{$contentnotes_quickreply}{$captcha}` (eigene Tabellenzeile `<tr>` vor der Captcha-Zeile) |
+| `usercp_nav_misc` | Entwürfe-Zeile (`<tr>…usercp.php?action=drafts…{$draftcount}…</tr>`) | Anker + fertig gebackene Menüzeile mit Inline-SVG-Icon (Kit `debugging.md` Punkt 20) |
 | `showthread` | `<div id="posts">` (liegt in `<td id="posts_container">`) | `{$contentnotes_thread_banner}<div id="posts"{$contentnotes_posts_attr}>` – Banner steht in derselben Tabellenzelle direkt über den Posts; `$contentnotes_posts_attr` ist leer oder ` class="contentnotes_veiled" data-contentnotes-veil="thread"` |
 | `forumdisplay_thread`, `search_results_threads_thread` | `{$thread['multipage']}` (steht direkt hinter dem Betreff-Link) | `{$thread['contentnotes_badge']}{$thread['multipage']}` |
 
 Guard-String/Entfernen per `find_replace_templatesets()` mit exaktem Gegen-Regex in
 `deactivate()`. Debugging-Punkte 17 und 18 beachten.
 
-## Eigene Templates (`contentnotes_*`, aus `.tpl`)
+## Eigene Templates (`contentnotes_*`, aus `.tpl`, Template-Set -1)
 `contentnotes_form`, `contentnotes_form_row`, `contentnotes_quickreply`, `contentnotes_badge`,
 `contentnotes_thread_banner`, `contentnotes_post_veil`, `contentnotes_note_item`,
-`contentnotes_usercp`, `contentnotes_usercp_row`, `contentnotes_usercp_menu`.
+`contentnotes_usercp`, `contentnotes_usercp_row`.
 (Inline-Markup des Parsers ist bewusst **kein** Template – Performance pro Vorkommen; das Markup
-steht als Konstante in `parser.php`, Texte aus der Sprachdatei.)
+steht im PHP, Texte aus der Sprachdatei. Der UserCP-Menüpunkt ist ebenfalls kein eigenes Template,
+sondern eine statisch in `usercp_nav_misc` gebackene Zeile.)
 
 ## Eigene Hooks / API
 - `contentnotes_get_notes(string $type, int $refid): array` – öffentliche Abfrage (für andere
@@ -176,20 +180,33 @@ Keine. Kein anderes Plugin wird benötigt.
 - ACP: eigene Admin-Permission `contentnotes` über `admin_config_permissions`.
 
 ## Verifizierte MyBB-Core-Fakten (Stand 1.8.41, Branch `feature` von mybb/mybb)
-- **Achtung:** Branch `master` von mybb/mybb ist **1.6.18**. Für 1.8 gegen `feature` oder einen
-  `mybb_18xx`-Branch prüfen.
+- Für 1.8 gegen `feature` oder einen `mybb_18xx`-Branch prüfen (`master` ist 1.6.x).
+- `global.php`: `$headerinclude` wird **nach** `global_intermediate` aus dem Template gebaut ⇒ Script-Einbindung
+  über `pre_output_page` (Hook in `output_page()`), nicht über `global_intermediate`.
 - `class_parser.php`: `parse_message` läuft nach `parse_mycode()`; `[code]`/`[php]` sind zu dem
   Zeitpunkt noch als `<mybb-code>`-Platzhalter ausgelagert ⇒ Codeblöcke werden vom `[cw]`-Regex
-  nicht erfasst. Ist `allow_html` aus, ist der Text bereits HTML-escaped; ist es an, muss der
-  Freitext im `[cw=…|Hinweis]` selbst mit `htmlspecialchars_uni(strip_tags(...))` behandelt werden.
+  nicht erfasst. Ist `allow_html` aus, ist der Text bereits HTML-escaped (`"` ⇒ `&quot;`); ist es an,
+  kommt er roh an. Der Hinweis wird deshalb einmal decodiert, von Tags befreit und neu escaped.
+- `MyLanguage::sprintf()` ersetzt `{1}`, `{2}` … (kein PHP-`%s`).
+- `DataHandler::get_friendly_errors()` sucht `postdata_<fehlercode>` in der Sprachdatei ⇒
+  `$lang->postdata_contentnotes_note_too_long` im Frontend-Sprachset.
 - `datahandlers/post.php`: `insert_thread_end` ⇒ `return_values` `pid`, `tid`, `visible`;
   `insert_post_end` ⇒ `pid`, `visible`, `closed`; `insert_merge` ⇒ `pid` (des bestehenden
-  Posts), `merge => true`; `update_end` ⇒ `visible`, `first_post` (pid über `$this->data['pid']`).
-- `codebuttons`-Template definiert `opt_editor` (mit `toolbar`-String) global und ruft
-  `$("#…").sceditor(opt_editor)` in `$(function(){…})` auf. jQuery-Ready-Handler laufen in
-  Registrierungsreihenfolge ⇒ ein Handler aus `headerinclude` kann `opt_editor.toolbar` vorher
-  ergänzen (`quote|` ⇒ `quote,contentnotes|`, Fallback: `|contentnotes` anhängen). Das
-  `codebuttons`-Template wird **nicht** verändert.
+  Posts), `merge => true`; `update_end` ⇒ `visible`, `first_post`; `data['pid']` ist gesetzt.
+  Beim Bearbeiten werden `tid`/`fid`/`firstpost` per Query ermittelt, nicht aus `data` angenommen.
+- `class_moderation_delete_thread_start` (vor dem Löschen) und `class_moderation_delete_thread` /
+  `class_moderation_delete_post` existieren in 1.8.41; `datahandler_user_delete_start` bekommt
+  `delete_uids` noch als Array.
+- `usercp.php` ruft `usercp_menu()` **vor** `usercp_start`; `$usercpnav` steht dort bereits zur Verfügung.
+- `find_replace_templatesets()` legt für Template-Sets, die das Template noch erben, eine Kopie an
+  (Autocreate). Die Injektion landet daher in den Theme-Sets (sid > 0), das Master-Template (sid -2)
+  bleibt unverändert; `deactivate()` baut ohne Autocreate zurück.
+- SCEditor: `format()`/`html()` eigener BBCodes wie in `jscripts/bbcodes_sceditor.js`; das Zurückschreiben
+  setzt Attribute mit Leerzeichen/Sonderzeichen in Anführungszeichen (siehe Parser). Ein BBCode ohne
+  Inhalt braucht `allowsEmpty: true`, sonst fügt `editor.insert('[cw=…]', '[/cw]')` nichts ein.
+  Das `codebuttons`-Template definiert `opt_editor` (inkl. `toolbar`) global und initialisiert in
+  `$(function(){…})`; ein früher registrierter Ready-Handler kann `opt_editor.toolbar` vorher ergänzen.
+  Die Schnellantwort im Thread nutzt standardmäßig **keinen** SCEditor (nur Textarea).
 
 ## Bekannte Grenzen / bewusste Annahmen
 - Quick-Edit (AJAX, `xmlhttp.php`) ändert keine Thread-/Post-Warnungen – nur der Volleditor.

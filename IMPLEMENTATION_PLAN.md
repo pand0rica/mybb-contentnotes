@@ -9,7 +9,7 @@ Kit-Pfade unten sind relativ zu `<Dev-Kit>/`.
 ---
 
 ## Schritt 1 – Grundgerüst & Zugriffsschutz
-- [ ] **Ziel:** Hauptdatei mit Zugriffsschutz, `contentnotes_info()` (Codename `contentnotes`,
+- [x] **Ziel:** Hauptdatei mit Zugriffsschutz, `contentnotes_info()` (Codename `contentnotes`,
       Version 1.0.0, Autor\*in pand0rica, `compatibility` `18*`), `require_once` der fünf Module aus
       `inc/plugins/contentnotes/`, Registrierung **aller** Hooks aus `PROJECT_CONTEXT.md` § Hooks
       (Handler zunächst als leere Stubs in den jeweiligen Modulen anlegen, damit nichts fatal endet).
@@ -19,7 +19,7 @@ Kit-Pfade unten sind relativ zu `<Dev-Kit>/`.
 - **Abnahme:** `php -l` auf alle Dateien sauber; Plugin erscheint in der ACP-Pluginliste.
 
 ## Schritt 2 – Lifecycle: install / is_installed / uninstall
-- [ ] **Ziel:** Die drei Tabellen exakt nach `PROJECT_CONTEXT.md` § Datenbank-Tabellen anlegen
+- [x] **Ziel:** Die drei Tabellen exakt nach `PROJECT_CONTEXT.md` § Datenbank-Tabellen anlegen
       (inkl. UNIQUE-/Index-Keys), settinggroup `contentnotes` + 4 Settings anlegen,
       leeren Datacache `contentnotes_categories` aufbauen. `is_installed()` prüft die Kategorien-
       Tabelle. `uninstall()` droppt alle drei Tabellen, löscht Settings + settinggroup,
@@ -30,7 +30,7 @@ Kit-Pfade unten sind relativ zu `<Dev-Kit>/`.
 - **Abnahme:** CLI-Lifecycle `install` legt Tabellen + Settings an (`standards/testing.md` §3).
 
 ## Schritt 3 – activate / deactivate: Templates, Stylesheet, Core-Template-Injection
-- [ ] **Ziel:**
+- [x] **Ziel:**
   - Alle `.tpl` aus `inc/plugins/contentnotes/templates/` als `contentnotes_*` (sid -2) laden
     (Template-Liste: `PROJECT_CONTEXT.md` § Eigene Templates; Inhalte zunächst minimal, werden in
     Schritt 5–8 ausgebaut).
@@ -54,7 +54,7 @@ Kit-Pfade unten sind relativ zu `<Dev-Kit>/`.
   byte-gleich zum Ausgangszustand (Diff des `templates`-Inhalts vorher/nachher).
 
 ## Schritt 4 – DB-Layer & Kategorie-Cache
-- [ ] **Ziel:** CRUD-Funktionen mit Präfix `contentnotes_db_`:
+- [x] **Ziel:** CRUD-Funktionen mit Präfix `contentnotes_db_`:
   - Kategorien: `get_categories(bool $active_only)` (aus Datacache), `get_category(int)`,
     `get_category_by_slug(string)`, `insert_category`, `update_category`, `delete_category`
     (löscht zugehörige Notes + Prefs), `slug_exists(string, int $exclude_cid)`,
@@ -77,7 +77,7 @@ Kit-Pfade unten sind relativ zu `<Dev-Kit>/`.
   Notes ersetzen/hinzufügen/löschen, Prefs-Auswertung inkl. Default „Warnung".
 
 ## Schritt 5 – Formulare, Validierung, Speichern, Aufräumen
-- [ ] **Ziel:**
+- [x] **Ziel:**
   - Rechte-Helper `contentnotes_user_can_set(int $fid): bool` (Setting enabled, `is_member()`
     gegen `contentnotes_groups`, Forum in `contentnotes_forums` oder `-1`).
   - Formular-Builder `contentnotes_build_form(string $type, array $selected, string $tpl)`:
@@ -105,12 +105,11 @@ Kit-Pfade unten sind relativ zu `<Dev-Kit>/`.
   Thread löschen ⇒ alle zugehörigen Notes weg. Freitext mit `<script>` wird beim Rendern escaped.
 
 ## Schritt 6 – Anzeige: Badge, Thread-Banner, Post-Veil, JS
-- [ ] **Ziel:**
-  - `contentnotes_handle_headerinclude` (`global_intermediate`, nur auf `newthread.php`,
-    `newreply.php`, `editpost.php`, `showthread.php`, `forumdisplay.php`, `search.php`):
-    `<script>` mit `var contentnotes_config = {categories:[{slug,name}], canSet:bool,
-    editorButton:bool, lang:{…}}` (per `json_encode`, nur aktive Kategorien) +
-    `<script src="{$mybb->asset_url}/jscripts/contentnotes.js?ver=100">`.
+- [x] **Ziel:**
+  - `contentnotes_handle_output` (`pre_output_page`, alle Frontend-Seiten mit `</head>`; **nicht**
+    `global_intermediate`, siehe Core-Fakten): `<script>` mit `var contentnotes_config =
+    {categories:[{slug,name}], canSet:bool, lang:{…}}` (per `json_encode`, nur aktive Kategorien, nur für
+    berechtigte Mitglieder) + `<script src="{$mybb->asset_url}/jscripts/contentnotes.js?ver=100">`.
   - Badge (`forumdisplay_thread`, `search_results_thread`): Notes aller tids der Seite einmalig
     laden (beim ersten Aufruf tids aus `$threadcache` bzw. dem Suchergebnis sammeln), Template
     `contentnotes_badge` mit Kategorienamen (escaped).
@@ -137,10 +136,10 @@ Kit-Pfade unten sind relativ zu `<Dev-Kit>/`.
   kein Veil. **Manueller Browsertest** fürs Aufdecken (JS) an übergeben.
 
 ## Schritt 7 – Inline-MyCode `[cw]` & Editor-Button
-- [ ] **Ziel:**
-  - `contentnotes_parse_inline` (`parse_message`): Regex
-    `#\[cw=([a-z0-9_-]{1,50})(?:\|([^\]]{0,255}))?\](.*?)\[/cw\]#si`, bis zu 3 Durchläufe
-    (Verschachtelung). Hinweis-Text: `htmlspecialchars_uni(strip_tags(htmlspecialchars_decode(...)))`
+- [x] **Ziel:**
+  - `contentnotes_parse_inline` (`parse_message`): Regex siehe `contentnotes_inline_pattern()` (Attribut roh
+    oder in Anführungszeichen, bis zu 5 Durchläufe für Verschachtelung), Attribut-Zerlegung in
+    `contentnotes_split_attr()`. Hinweis-Text: einmal decodieren, `strip_tags`, neu escapen
     (sicher für `allow_html` an und aus). Ausgabe bei Warnung:
     `<span class="contentnotes_inline" data-cw="slug" role="button" tabindex="0" aria-expanded="false"><span class="contentnotes_inline_label">⚠ Name: Hinweis</span> <span class="contentnotes_inline_text">Text</span></span>`;
     bei „einblenden" nur `Text`. Unbekanntes Kürzel ⇒ Label aus `$lang->contentnotes_generic`,
@@ -162,7 +161,7 @@ Kit-Pfade unten sind relativ zu `<Dev-Kit>/`.
   „einblenden"). Editor-Button + WYSIWYG-Roundtrip: **manueller Browsertest**.
 
 ## Schritt 8 – UserCP-Seite
-- [ ] **Ziel:** Menüpunkt in der UserCP-Sidebar (eigene Zeile mit Icon, Kit §14),
+- [x] **Ziel:** Menüpunkt in der UserCP-Sidebar (eigene Zeile mit Icon, Kit §14),
       `usercp.php?action=contentnotes` (Login-Pflicht): Tabelle aller Kategorien (aktive +
       solche, für die schon eine Pref existiert), Name + Beschreibung, je zwei Radio-Buttons
       „Warnung anzeigen" / „ohne Warnung einblenden" (Default Warnung). Speichern per POST
@@ -175,7 +174,7 @@ Kit-Pfade unten sind relativ zu `<Dev-Kit>/`.
   Key speichert Modi; Anzeige danach vorbelegt.
 
 ## Schritt 9 – ACP-Config-Modul „Inhaltswarnungen"
-- [ ] **Ziel:** Modul `admin/modules/config/contentnotes.php`, registriert über
+- [x] **Ziel:** Modul `admin/modules/config/contentnotes.php`, registriert über
       `admin_config_menu`, `admin_config_action_handler`, `admin_config_permissions`
       (Permission `contentnotes`). `$lang->load('contentnotes')` als erste Anweisung.
       Aktionen:
@@ -198,7 +197,7 @@ Kit-Pfade unten sind relativ zu `<Dev-Kit>/`.
   (`standards/testing.md` §8).
 
 ## Schritt 10 – Sprachdateien
-- [ ] **Ziel:** Alle genutzten Keys `contentnotes_*` definieren – Frontend (Formular, Banner,
+- [x] **Ziel:** Alle genutzten Keys `contentnotes_*` definieren – Frontend (Formular, Banner,
       Badge, Veil, Inline, UserCP, Fehler, JS-Strings) und Admin (Modul, Settings-Titel/-Beschreibungen
       nur falls per Sprachdatei, Formular, Meldungen, `contentnotes_invalid_key`). english +
       deutsch_du, Frontend/Admin strikt getrennt, geschlechtergerecht (neutral, sonst Sternchen;
@@ -213,7 +212,7 @@ Kit-Pfade unten sind relativ zu `<Dev-Kit>/`.
   Sprachdatei-Grep (`standards/testing.md` §6).
 
 ## Schritt 11 – Selbsttests finalisieren
-- [ ] **Ziel:** `tests/cli-plugin.php` (Lifecycle inkl. Template-Diff aus Schritt 3) und
+- [x] **Ziel:** `tests/cli-plugin.php` (Lifecycle inkl. Template-Diff aus Schritt 3) und
       `tests/cli-selftest.php` (DB-Layer aus Schritt 4, Prefs-Auswertung, Parser-Fixtures aus
       Schritt 7, Rechte-Helper aus Schritt 5).
 - **Vorlage:** `standards/testing.md` §3, §4, §7
@@ -224,3 +223,22 @@ Kit-Pfade unten sind relativ zu `<Dev-Kit>/`.
 
 Begleitdateien (README, CHANGELOG, PLUGIN_POST.html, LICENSE, FUNDING.yml, .gitignore,
 .claudeignore, docs/screenshots) macht **Phase 3** („reviewe das Projekt").
+
+---
+
+## Umsetzungsstand (Phase 2)
+
+Alle 11 Schritte sind umgesetzt und abgehakt. Getestet gegen eine echte MyBB-1.8.41-Installation
+(MariaDB 10.11, PHP 8.3, Installer-Lauf per Skript, `php -S`) mit `error_reporting(-1)`:
+
+| Test | Umfang | Ergebnis |
+|---|---|---|
+| `tests/cli-plugin.php` | install → status → uninstall (alle Zähler 0, Core-Templates byte-gleich) → install; Settings überleben deactivate/activate | grün |
+| `tests/cli-selftest.php` | DB-Schicht, Prefs, Rechte, Formular-Eingabe, Speichern/Aufräumen, Parser (inkl. `postParser`, `[code]`, Escaping), Veil/Badge | 116 passed, 0 failed |
+| HTTP-Durchläufe (nicht im Repo, Python/requests) | ACP: Anlegen/Bearbeiten/Umschalten/Löschen/Sortieren inkl. CSRF-Prüfung, Settings-Texte, Admin-Log (30 Prüfungen); Frontend: Formulare, Speichern, Vorschau, Fehler, Bearbeiten, Badge, Suche, Thread-/Post-Veil, UserCP, Plugin aus, Rechte, Löschen (72 Prüfungen) | grün |
+| Browser (Chromium/Playwright, nicht im Repo) | Aufdecken (Thread, Post, Inline, Tastatur), Ansicht ohne JS, Editor-Button, Dropdown, Einfügen, WYSIWYG-Roundtrip, Vorschau (39 Prüfungen) | grün |
+
+**Nicht** getestet: PHP 7.4 (nur PHP 8.3; es wurde keine 8.0-only-Syntax verwendet), MySQL (nur MariaDB),
+Fremd-Themes, Threaded-Ansicht des Threads (Banner/Verdecken gelten nur für den linearen Modus, Posts
+mit eigener Warnung funktionieren in beiden), mobile Ansicht, ein visueller ACP-Klickdurchgang durch
+einen Menschen (ACP wurde per HTTP geprüft).

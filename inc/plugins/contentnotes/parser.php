@@ -10,25 +10,60 @@ if (!defined('IN_MYBB')) {
 }
 
 /**
- * Reguläre Ausdrücke für innerste [cw]-Blöcke (kein weiteres [cw] im Inhalt).
+ * Regulärer Ausdruck für innerste [cw]-Blöcke (kein weiteres [cw] im Inhalt).
+ * Das Attribut ist entweder in Anführungszeichen (so schreibt es der SCEditor zurück, sobald
+ * der Hinweis Leerzeichen enthält) oder roh bis zur schließenden Klammer.
  *
  * @return string
  */
 function contentnotes_inline_pattern(): string
 {
-    return '#\[cw(?:=([a-z0-9_-]{1,50})(?:\|([^\]]*))?)?\]((?:(?!\[cw[=\]]|\[/cw\]).)*)\[/cw\]#is';
+    return '#\[cw(?:=("(?:[^"\\\\]|\\\\.)*"|[^\]]*))?\]((?:(?!\[cw[=\]]|\[/cw\]).)*)\[/cw\]#is';
 }
 
 /**
- * Bereinigt einen Hinweistext: Entities auflösen, Tags entfernen, neu escapen.
+ * Zerlegt das [cw]-Attribut in Kürzel und Hinweistext.
+ *
+ * Erlaubt sind `kuerzel`, `kuerzel|Hinweis` und beides in Anführungszeichen (`"kuerzel|Hinweis"`,
+ * Anführungszeichen im Text als `\"`). Ist das Kürzel ungültig, bleibt es leer (allgemeine
+ * Inhaltswarnung) und der ganze Text wird zum Hinweis – es geht nichts verloren.
+ *
+ * Das Attribut kann HTML-escaped ankommen (ohne erlaubtes HTML läuft der Parser vorher
+ * htmlspecialchars): deshalb zuerst einmal zurückwandeln.
+ *
+ * @param string $attr Attribut nach dem "="
+ * @return array [Kürzel, Hinweis als Rohtext]
+ */
+function contentnotes_split_attr(string $attr): array
+{
+    $attr = trim(htmlspecialchars_decode($attr, ENT_QUOTES));
+
+    if (strlen($attr) >= 2 && $attr[0] === '"' && substr($attr, -1) === '"') {
+        $attr = (string)preg_replace('/\\\\(["\\\\])/', '$1', substr($attr, 1, -1));
+    }
+    if ($attr === '') {
+        return ['', ''];
+    }
+
+    $parts = explode('|', $attr, 2);
+    $slug  = strtolower(trim($parts[0]));
+    if (!contentnotes_valid_slug($slug)) {
+        return ['', $attr];
+    }
+
+    return [$slug, $parts[1] ?? ''];
+}
+
+/**
+ * Bereinigt einen Hinweistext (Rohtext): Tags entfernen, Whitespace glätten, kürzen, escapen.
  * Ist sicher, egal ob HTML im Beitrag erlaubt ist oder nicht.
  *
- * @param string $raw Hinweistext aus dem MyCode
+ * @param string $raw Hinweistext als Rohtext
  * @return string
  */
 function contentnotes_clean_note(string $raw): string
 {
-    $raw = trim(strip_tags(htmlspecialchars_decode($raw)));
+    $raw = trim(strip_tags($raw));
     $raw = trim((string)preg_replace('/\s+/', ' ', $raw));
     if (my_strlen($raw) > 255) {
         $raw = my_substr($raw, 0, 255);
@@ -78,7 +113,7 @@ function contentnotes_parse_inline($message)
     // Plugin im Frontend ausgeschaltet: Markierungen entfernen, Text bleibt stehen
     if (!contentnotes_is_enabled()) {
         return contentnotes_replace_inline($message, static function (array $m): string {
-            return $m[3];
+            return $m[2];
         });
     }
 
@@ -87,9 +122,9 @@ function contentnotes_parse_inline($message)
     return contentnotes_replace_inline($message, static function (array $m): string {
         global $lang;
 
-        $slug     = strtolower((string)($m[1] ?? ''));
-        $note     = contentnotes_clean_note((string)($m[2] ?? ''));
-        $content  = $m[3];
+        list($slug, $raw_note) = contentnotes_split_attr((string)($m[1] ?? ''));
+        $note     = contentnotes_clean_note($raw_note);
+        $content  = $m[2];
         $category = $slug !== '' ? contentnotes_db_get_category_by_slug($slug) : null;
 
         // Vorlieben: bekannte Kategorie auf „einblenden“ => nur der Text
@@ -125,9 +160,9 @@ function contentnotes_parse_inline_text($message)
     return contentnotes_replace_inline($message, static function (array $m): string {
         global $lang;
 
-        $slug     = strtolower((string)($m[1] ?? ''));
-        $category = $slug !== '' ? contentnotes_db_get_category_by_slug($slug) : null;
-        $name     = $category !== null ? $category['name'] : (string)$lang->contentnotes_generic;
+        list($slug) = contentnotes_split_attr((string)($m[1] ?? ''));
+        $category   = $slug !== '' ? contentnotes_db_get_category_by_slug($slug) : null;
+        $name       = $category !== null ? $category['name'] : (string)$lang->contentnotes_generic;
 
         return $lang->sprintf((string)$lang->contentnotes_text_replacement, $name);
     });
