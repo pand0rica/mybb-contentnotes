@@ -43,7 +43,7 @@ $l['contentnotes_success_activated'] = "Die Kategorie wurde aktiviert.";
 $l['contentnotes_success_deactivated'] = "Die Kategorie wurde deaktiviert.";
 $l['contentnotes_success_deleted'] = "Die Kategorie samt allen Markierungen und Einstellungen von Mitgliedern wurde gelöscht.";
 $l['contentnotes_success_order'] = "Die Sortierung wurde gespeichert.";
-$l['contentnotes_confirm_delete'] = "Möchtest du die Kategorie \"%s\" wirklich löschen? Alle Markierungen an Threads und Beiträgen und alle Einstellungen von Mitgliedern zu dieser Kategorie werden ebenfalls gelöscht.";
+$l['contentnotes_confirm_delete'] = "Möchtest du die Kategorie \"{1}\" wirklich löschen? Alle Markierungen an Threads und Beiträgen und alle Einstellungen von Mitgliedern zu dieser Kategorie werden ebenfalls gelöscht.";
 
 // Übersichtstabelle
 $l['contentnotes_col_name'] = "Name";

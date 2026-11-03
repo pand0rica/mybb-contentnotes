@@ -43,7 +43,7 @@ $l['contentnotes_success_activated'] = "The category has been activated.";
 $l['contentnotes_success_deactivated'] = "The category has been deactivated.";
 $l['contentnotes_success_deleted'] = "The category and all its markings and member settings have been deleted.";
 $l['contentnotes_success_order'] = "The display order has been saved.";
-$l['contentnotes_confirm_delete'] = "Do you really want to delete the category \"%s\"? All markings on threads and posts and all member settings for this category will be deleted as well.";
+$l['contentnotes_confirm_delete'] = "Do you really want to delete the category \"{1}\"? All markings on threads and posts and all member settings for this category will be deleted as well.";
 
 // Overview table
 $l['contentnotes_col_name'] = "Name";

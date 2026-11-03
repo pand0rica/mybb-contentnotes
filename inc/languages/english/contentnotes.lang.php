@@ -3,7 +3,7 @@
 
 $l['contentnotes_generic'] = "Content note";
 $l['contentnotes_inline_title'] = "Click to show";
-$l['contentnotes_text_replacement'] = "[Content note: %s]";
+$l['contentnotes_text_replacement'] = "[Content note: {1}]";
 
 // Form (new thread, reply, edit post)
 $l['contentnotes_form_title'] = "Content notes";

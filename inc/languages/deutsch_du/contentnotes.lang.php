@@ -3,7 +3,7 @@
 
 $l['contentnotes_generic'] = "Inhaltswarnung";
 $l['contentnotes_inline_title'] = "Zum Anzeigen klicken";
-$l['contentnotes_text_replacement'] = "[Inhaltswarnung: %s]";
+$l['contentnotes_text_replacement'] = "[Inhaltswarnung: {1}]";
 
 // Formular (neuer Thread, Antwort, Beitrag bearbeiten)
 $l['contentnotes_form_title'] = "Inhaltswarnungen";
