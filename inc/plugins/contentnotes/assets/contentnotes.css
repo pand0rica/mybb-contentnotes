@@ -1,0 +1,99 @@
+/* Content Notes */
+
+/* Badge in Forenansicht / Suche */
+.contentnotes_badge {
+	display: inline-block;
+	margin-left: 6px;
+	padding: 0 6px;
+	border: 1px solid rgba(160, 120, 0, 0.6);
+	border-radius: 3px;
+	background: rgba(255, 193, 7, 0.18);
+	white-space: nowrap;
+	vertical-align: middle;
+}
+
+/* Warnkasten (Thread) und Warnkopf (Post) */
+.contentnotes_banner,
+.contentnotes_notice {
+	margin: 0 0 8px 0;
+	padding: 8px 10px;
+	border: 1px solid rgba(160, 120, 0, 0.6);
+	border-radius: 3px;
+	background: rgba(255, 193, 7, 0.15);
+}
+
+.contentnotes_note_list {
+	margin: 4px 0 8px 18px;
+	padding: 0;
+}
+
+/* Aufdecken geht nur mit JavaScript: ohne JS bleibt alles lesbar, der Button ist dann ausgeblendet */
+.contentnotes_reveal {
+	display: none;
+}
+
+.contentnotes_js .contentnotes_reveal {
+	display: inline-block;
+}
+
+.contentnotes_js .contentnotes_veiled {
+	display: none;
+}
+
+/* Textstellen: im Lesefluss, ohne Block und Zeilenumbruch */
+.contentnotes_inline {
+	cursor: pointer;
+}
+
+.contentnotes_inline_label {
+	display: inline;
+	padding: 0 4px;
+	border: 1px solid rgba(160, 120, 0, 0.6);
+	border-radius: 3px;
+	background: rgba(255, 193, 7, 0.18);
+	font-size: 0.85em;
+	white-space: normal;
+}
+
+.contentnotes_js .contentnotes_inline:not(.is-revealed) .contentnotes_inline_text {
+	-webkit-filter: blur(5px);
+	filter: blur(5px);
+	-webkit-user-select: none;
+	user-select: none;
+}
+
+.contentnotes_inline.is-revealed {
+	cursor: auto;
+}
+
+.contentnotes_inline:focus-visible {
+	outline: 2px solid currentColor;
+	outline-offset: 2px;
+}
+
+/* Formular beim Schreiben */
+.contentnotes_details summary {
+	cursor: pointer;
+}
+
+.contentnotes_form_row {
+	margin: 4px 0;
+}
+
+.contentnotes_note_input {
+	max-width: 100%;
+	margin-left: 8px;
+}
+
+/* Editor-Button */
+.sceditor-button-contentnotes div:before {
+	content: "\26A0";
+	display: block;
+	font-size: 14px;
+	line-height: 16px;
+	text-align: center;
+}
+
+.sceditor-button-contentnotes div {
+	background-image: none;
+}
