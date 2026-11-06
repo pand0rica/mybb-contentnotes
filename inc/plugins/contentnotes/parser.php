@@ -127,9 +127,15 @@ function contentnotes_parse_inline($message)
         $content  = $m[2];
         $category = $slug !== '' ? contentnotes_db_get_category_by_slug($slug) : null;
 
-        // Vorlieben: bekannte Kategorie auf „einblenden“ => nur der Text
-        if ($category !== null && !contentnotes_viewer_wants_warning([(int)$category['cid']])) {
-            return $content;
+        // Vorlieben: bekannte Kategorie auf „komplett ausblenden“ => spurlos weg, auf „einblenden“ => nur der Text
+        if ($category !== null) {
+            $action = contentnotes_viewer_action([(int)$category['cid']]);
+            if ($action === 'hide') {
+                return '';
+            }
+            if ($action === 'show') {
+                return $content;
+            }
         }
 
         $name  = $category !== null ? htmlspecialchars_uni($category['name']) : htmlspecialchars_uni((string)$lang->contentnotes_generic);

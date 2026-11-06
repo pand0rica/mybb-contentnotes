@@ -30,9 +30,22 @@ anklickbare Warnung sehen oder den Inhalt direkt ohne Warnung angezeigt bekommen
 
 ### Persönliche Einstellung (UserCP)
 - Eigene Seite `usercp.php?action=contentnotes` mit Menüpunkt in der UserCP-Sidebar.
-- Pro Kategorie: **Warnung anzeigen** (Modus 0) oder **ohne Warnung einblenden** (Modus 1).
-- **Standard = Warnung**: kein Eintrag in `contentnotes_userprefs` ⇒ Warnung. Gäste sehen
-  immer Warnungen.
+- Pro Kategorie drei Modi (Spalte `contentnotes_userprefs.mode`): **0 = Warnung anzeigen**, **1 = ohne Warnung einblenden**,
+  **2 = komplett ausblenden**.
+- **Standard = Warnung**: kein Eintrag in `contentnotes_userprefs` ⇒ Warnung. Gäste sehen immer Warnungen (nie „ausblenden").
+- **Rangfolge bei mehreren Kategorien an einem Element: die strengste Stufe gewinnt (hide > warn > show).**
+  Logik: `contentnotes_viewer_action(array $cids): 'hide'|'warn'|'show'` (Prefs pro Request gemerkt, beim Speichern/Löschen aktualisiert).
+  Öffentliche API: `contentnotes_viewer_wants_warning()` (= nur bei `warn`) und `contentnotes_viewer_hides()`.
+- **„Komplett ausblenden" bedeutet je Ort:**
+  - *Thread*: verschwindet aus Forenansicht und Suchergebnissen (die Zeile wird aus der fertigen Seite entfernt); ein direkter
+    Aufruf zeigt nur die Meldung „Durch deine Einstellungen ausgeblendet" mit Link zu den Einstellungen.
+  - *Post*: der ganze Beitrag (Container + Anker) wird aus der Thread-Ansicht entfernt.
+  - *Textstelle* `[cw]…[/cw]`: spurlos entfernt (kein Label, kein Text), der Satz liest sich ohne die Stelle weiter.
+  - Die **Vorschau** (`postbit_prev`) blendet nie aus (wie Warnung), Klartext-Kontexte (RSS/E-Mail) bleiben „[Inhaltswarnung: …]".
+  - Technik: Handler schreiben Marker-Kommentare (`<!--contentnotes-hide-thread:TID-->` in die Thread-Zeile über `$thread['contentnotes_badge']`,
+    `<!--contentnotes-hide-post:PID-->` in `$post['message']`); `contentnotes_handle_output()` (`pre_output_page`) entfernt das
+    umgebende `<tr>` bzw. den Post-Container (Div-Balance-Scanner). Die Nachricht eines ausgeblendeten Posts wird **nie** ausgeliefert:
+    lässt sich der Container nicht sicher abgrenzen, bleibt nur eine kurze Hinweiszeile stehen.
 
 ### Drei Markierungsorte
 1. **Thread** (beim Erstellen bzw. beim Bearbeiten des ersten Posts):
@@ -96,7 +109,7 @@ Alle `ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci` (Kit `conventi
 |---|---|---|
 | `contentnotes_categories` | Kategorien | `cid` INT(11) AI PK, `name` VARCHAR(100) NOT NULL, `slug` VARCHAR(50) NOT NULL UNIQUE, `description` TEXT, `active` TINYINT(1) DEFAULT 1, `disporder` INT(11) DEFAULT 0 |
 | `contentnotes_notes` | Markierungen an Threads/Posts | `nid` INT(11) AI PK, `type` VARCHAR(10) NOT NULL (`thread` \| `post`), `refid` INT(11) NOT NULL (tid bzw. pid), `cid` INT(11) NOT NULL, `note` VARCHAR(255) NOT NULL DEFAULT ''; UNIQUE KEY (`type`,`refid`,`cid`), KEY (`type`,`refid`) |
-| `contentnotes_userprefs` | Vorlieben pro Mitglied & Kategorie | `uid` INT(11) NOT NULL, `cid` INT(11) NOT NULL, `mode` TINYINT(1) NOT NULL DEFAULT 0 (0 = Warnung, 1 = einblenden); PRIMARY KEY (`uid`,`cid`) |
+| `contentnotes_userprefs` | Vorlieben pro Mitglied & Kategorie | `uid` INT(11) NOT NULL, `cid` INT(11) NOT NULL, `mode` TINYINT(1) NOT NULL DEFAULT 0 (0 = Warnung, 1 = einblenden, 2 = komplett ausblenden); PRIMARY KEY (`uid`,`cid`) |
 
 **Datacache** `contentnotes_categories`: Array aller Kategorien (cid ⇒ Zeile), sortiert nach
 `disporder, name`. Neuaufbau über `contentnotes_db_rebuild_cache()` nach jeder ACP-Änderung und in
@@ -118,7 +131,7 @@ Alle `ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci` (Kit `conventi
 | `newthread_start` | `contentnotes_handle_newthread_form` | forms | `$contentnotes_form` (Thread) bauen |
 | `newreply_start` | `contentnotes_handle_newreply_form` | forms | `$contentnotes_form` (Post) bauen |
 | `editpost_end` | `contentnotes_handle_editpost_form` | forms | Formular, vorbelegt aus DB; erster Post ⇒ Thread-Notes |
-| `showthread_start` | `contentnotes_handle_showthread_start` | display | Thread-Notes laden, `$contentnotes_thread_banner`, `$contentnotes_posts_attr`, Quick-Reply-Zeile `$contentnotes_quickreply` |
+| `showthread_start` | `contentnotes_handle_showthread_start` | display | Thread-Notes laden; bei „ausblenden“ `error()` mit Hinweis statt Thread; `$contentnotes_thread_banner`, `$contentnotes_posts_attr`, Quick-Reply-Zeile `$contentnotes_quickreply` |
 | `datahandler_post_validate_thread` / `_post` | `contentnotes_handle_validate` | forms | Input prüfen (cid aktiv, Freitext ≤ 255), Fehler via `$this->set_error()` |
 | `datahandler_post_insert_thread_end` | `contentnotes_handle_insert_thread` | forms | Thread-Notes speichern (`return_values['tid']`) |
 | `datahandler_post_insert_post_end` | `contentnotes_handle_insert_post` | forms | Post-Notes speichern (`return_values['pid']`) |
@@ -209,6 +222,9 @@ Keine. Kein anderes Plugin wird benötigt.
   Die Schnellantwort im Thread nutzt standardmäßig **keinen** SCEditor (nur Textarea).
 
 ## Bekannte Grenzen / bewusste Annahmen
+- „Komplett ausblenden“ entfernt Elemente nur aus der fertigen Seite: Thread-/Post-Zähler, Seitenumbruch und Nummerierung (#1, #2, #4 …) bleiben unverändert;
+  Titel können an Stellen auftauchen, die das Plugin nicht anfasst (Index „Letzter Beitrag“, Portal, Abo-/Profil-Listen, Zitate). Per AJAX
+  eingefügte Antworten (Schnellantwort) zeigen bei „ausblenden“ nur die Hinweiszeile.
 - Quick-Edit (AJAX, `xmlhttp.php`) ändert keine Thread-/Post-Warnungen – nur der Volleditor.
 - Threads zusammenführen: Thread-Warnungen des aufgelösten Threads entfallen.
 - „Inhalt anzeigen" gilt pro Seitenaufruf; nichts wird in Cookie/Storage gemerkt.

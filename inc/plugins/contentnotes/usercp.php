@@ -85,7 +85,7 @@ function contentnotes_usercp_page(): void
         $modes     = [];
         foreach ($categories as $cid => $category) {
             if (isset($submitted[$cid])) {
-                $modes[$cid] = ((string)$submitted[$cid] === '1') ? 1 : 0;
+                $modes[$cid] = contentnotes_normalize_mode($submitted[$cid]);
             }
         }
         contentnotes_db_save_user_prefs($uid, $modes);
@@ -112,9 +112,10 @@ function contentnotes_usercp_page(): void
         $description_html = $description !== ''
             ? '<br /><span class="smalltext">' . htmlspecialchars_uni($description) . '</span>'
             : '';
-        $show         = isset($prefs[$cid]) && (int)$prefs[$cid] === 1;
-        $checked_warn = $show ? '' : ' checked="checked"';
-        $checked_show = $show ? ' checked="checked"' : '';
+        $mode         = isset($prefs[$cid]) ? contentnotes_normalize_mode($prefs[$cid]) : 0;
+        $checked_warn = $mode === 0 ? ' checked="checked"' : '';
+        $checked_show = $mode === 1 ? ' checked="checked"' : '';
+        $checked_hide = $mode === 2 ? ' checked="checked"' : '';
         eval('$rows .= "' . $templates->get('contentnotes_usercp_row') . '";');
     }
 

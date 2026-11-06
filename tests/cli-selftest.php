@@ -476,6 +476,90 @@ check('Kategorie nicht mehr im Cache', null, contentnotes_db_get_category($retir
 contentnotes_db_delete_notes('thread', [7001]);
 contentnotes_db_delete_user_prefs([793]);
 
+// ---------------------------------------------------------------------------------------
+echo "Komplett ausblenden (Modus 2)\n";
+// ---------------------------------------------------------------------------------------
+$unknown_cid = 888888;
+check('normalize_mode: 0/1/2 bleiben, Rest ⇒ 0', [0, 1, 2, 0, 0, 0], [contentnotes_normalize_mode(0), contentnotes_normalize_mode('1'), contentnotes_normalize_mode(2), contentnotes_normalize_mode(3), contentnotes_normalize_mode(-1), contentnotes_normalize_mode('x')]);
+
+as_user(0, '1');
+check('Gast: nie ausblenden, immer Warnung', 'warn', contentnotes_viewer_action([$violence]));
+check('Gast: viewer_hides false', false, contentnotes_viewer_hides([$violence]));
+
+as_user(795, '2');
+check('ohne Einträge: Warnung', 'warn', contentnotes_viewer_action([$violence]));
+contentnotes_db_save_user_prefs(795, [$violence => 2, $addiction => 1, 777777 => 7]);
+check('Modus 2 wird gespeichert', 2, contentnotes_db_get_user_prefs(795)[$violence] ?? null);
+check('ungültiger Modus ⇒ 0 gespeichert', 0, contentnotes_db_get_user_prefs(795)[777777] ?? null);
+check('hide', 'hide', contentnotes_viewer_action([$violence]));
+check('show', 'show', contentnotes_viewer_action([$addiction]));
+check('hide > show', 'hide', contentnotes_viewer_action([$addiction, $violence]));
+check('show + unbekannte Kategorie ⇒ warn', 'warn', contentnotes_viewer_action([$addiction, $unknown_cid]));
+check('hide schlägt auch warn', 'hide', contentnotes_viewer_action([$unknown_cid, $violence]));
+check('keine Kategorien ⇒ show', 'show', contentnotes_viewer_action([]));
+check('viewer_wants_warning nur bei warn', [false, false, true], [contentnotes_viewer_wants_warning([$violence]), contentnotes_viewer_wants_warning([$addiction]), contentnotes_viewer_wants_warning([$unknown_cid])]);
+check('viewer_hides', true, contentnotes_viewer_hides([$violence, $addiction]));
+
+// Parser: Textstelle spurlos
+check('Inline hide: Stelle verschwindet, Satz bleibt lesbar', 'a  b', contentnotes_parse_inline('a [cw=gewalt|Folter]geheim[/cw] b'));
+check('Inline show (Sucht auf einblenden): nur Text', 'a sichtbar b', contentnotes_parse_inline('a [cw=sucht]sichtbar[/cw] b'));
+check('Inline hide verschachtelt: innere weg, äußere Warnung bleibt', true, (function () use ($lang) {
+    $out = contentnotes_parse_inline('[cw=unbekannt]außen [cw=gewalt]innen[/cw] weiter[/cw]');
+    return strpos($out, 'innen') === false && strpos($out, 'außen') !== false && strpos($out, 'weiter') !== false && substr_count($out, 'class="contentnotes_inline"') === 1;
+})());
+check('Inline hide: äußere hide entfernt alles', 'x  y', contentnotes_parse_inline('x [cw=gewalt]außen [cw=sucht]innen[/cw][/cw] y'));
+check('Inline: unbekanntes Kürzel wird nie ausgeblendet', true, strpos(contentnotes_parse_inline('[cw=unbekannt]t[/cw]'), 'contentnotes_inline') !== false);
+check('Klartext-Ersatz bleibt bei hide', 'a [Content note: Gewalt <b>] b', contentnotes_parse_inline_text('a [cw=gewalt]geheim[/cw] b'));
+
+// Badge: Marker statt Badge
+contentnotes_db_replace_notes('thread', 6101, [$violence => 'Folter', $addiction => '']);
+$thread      = ['tid' => 6101, 'subject' => 'x'];
+$threadcache = [6101 => $thread];
+contentnotes_handle_thread_badge();
+check('Badge hide: nur Marker, kein Inhalt', '<!--contentnotes-hide-thread:6101-->', $thread['contentnotes_badge'] ?? null);
+as_user(0, '1');
+$thread = ['tid' => 6101, 'subject' => 'x'];
+contentnotes_handle_thread_badge();
+check_true('Gast: Badge statt Marker', strpos($thread['contentnotes_badge'], 'contentnotes_badge') !== false && strpos($thread['contentnotes_badge'], 'hide') === false);
+as_user(795, '2');
+contentnotes_db_delete_notes('thread', [6101]);
+
+// Post: Marker + Hinweiszeile, Nachricht wird nie ausgeliefert
+$post = ['pid' => 77, 'message' => '<p>GEHEIMER Inhalt</p>'];
+contentnotes_veil_post($post, [$violence => 'Folter']);
+check_true('Post hide: Marker + Fallbackzeile, Nachricht entfernt', strpos($post['message'], '<!--contentnotes-hide-post:77-->') === 0 && strpos($post['message'], 'GEHEIMER') === false && strpos($post['message'], 'contentnotes_hidden_note') !== false);
+$post = ['pid' => 77, 'message' => '<p>Inhalt</p>'];
+contentnotes_veil_post($post, [$violence => 'Folter'], false);
+check_true('Vorschau (allow_hide=false): Warnkopf statt Entfernen', strpos($post['message'], 'contentnotes_wrap') !== false && strpos($post['message'], 'hide-post') === false);
+$post = ['pid' => 77, 'message' => '<p>Inhalt</p>'];
+contentnotes_veil_post($post, [$addiction => '']);
+check('Post show: unverändert', '<p>Inhalt</p>', $post['message']);
+
+// Ausgabefilter
+$page = "<table>\n<tr class=\"inline_row\"><td>Thread A</td></tr>\n<tr class=\"inline_row\"><td><span id=\"tid_6\">Thread B</span> <!--contentnotes-hide-thread:6--></td></tr>\n<tr class=\"inline_row\"><td>Thread C</td></tr>\n</table>";
+$out  = contentnotes_strip_hidden($page);
+check_true('Filter: markierte Thread-Zeile weg, Nachbarn bleiben', strpos($out, 'Thread B') === false && strpos($out, 'hide-thread') === false && strpos($out, 'Thread A') !== false && strpos($out, 'Thread C') !== false && substr_count($out, '<tr') === 2 && substr_count($out, '</tr>') === 2);
+
+$posts = '<a name="pid1" id="pid1"></a><div class="post " id="post_1"><div class="p">Post1</div></div>' . "\n"
+    . '<a name="pid2" id="pid2"></a><div class="post classic " style="" id="post_2"><div><div>verschachtelt</div></div><!--contentnotes-hide-post:2--><div class="contentnotes_hidden_note">fb</div></div>' . "\n"
+    . '<a name="pid3" id="pid3"></a><div class="post " id="post_3">Post3</div>';
+$out = contentnotes_strip_hidden($posts);
+check_true('Filter: Post samt Anker entfernt, Nachbarn intakt', strpos($out, 'post_2') === false && strpos($out, 'pid2') === false && strpos($out, 'verschachtelt') === false && strpos($out, 'Post1') !== false && strpos($out, 'Post3') !== false && strpos($out, 'pid1') !== false && strpos($out, 'pid3') !== false);
+check('Filter: Div-Balance der Reste stimmt', substr_count($out, '<div'), substr_count($out, '</div>'));
+check_true('Filter: kein Marker bleibt übrig', strpos($out, 'contentnotes-hide') === false);
+
+$broken = '<a name="pid4" id="pid4"></a><div class="post" id="post_4"><div>offen<!--contentnotes-hide-post:4--><div class="contentnotes_hidden_note">fb</div>';
+$out    = contentnotes_strip_hidden($broken);
+check_true('Filter: unausgeglichenes HTML ⇒ nur Marker weg, Hinweiszeile bleibt', strpos($out, 'hide-post') === false && strpos($out, 'contentnotes_hidden_note') !== false);
+
+$plain = '<html><body>Nichts zu tun [cw] <!-- anderer Kommentar --></body></html>';
+check('Filter: ohne Marker unverändert', $plain, contentnotes_strip_hidden($plain));
+check('Ausgabe-Hook: ohne Marker/</head> unverändert', $plain, contentnotes_handle_output($plain));
+$page_with_marker = '<html><head></head><body><div class="post" id="post_9"><!--contentnotes-hide-post:9-->x</div>nach</body></html>';
+check_true('Ausgabe-Hook entfernt Marker auch ohne Script-Einbindung', strpos(contentnotes_handle_output($page_with_marker), 'post_9') === false);
+contentnotes_db_delete_user_prefs([795]);
+as_user(0, '1');
+
 // Aufräumen: Fixtures entfernen
 $db->delete_query('contentnotes_notes');
 $db->delete_query('contentnotes_userprefs');

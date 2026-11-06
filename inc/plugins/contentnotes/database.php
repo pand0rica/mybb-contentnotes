@@ -409,10 +409,11 @@ function contentnotes_db_delete_notes(string $type, array $refids): void
 /**
  * Liest die Vorlieben eines Mitglieds.
  *
- * @param int $uid Mitglieds-ID
- * @return array cid => Modus (0 = Warnung, 1 = einblenden)
+ * @param int  $uid     Mitglieds-ID
+ * @param bool $refresh true = den im Request gemerkten Stand verwerfen und neu lesen
+ * @return array cid => Modus (0 = Warnung, 1 = einblenden, 2 = komplett ausblenden)
  */
-function contentnotes_db_get_user_prefs(int $uid): array
+function contentnotes_db_get_user_prefs(int $uid, bool $refresh = false): array
 {
     global $db;
 
@@ -422,7 +423,7 @@ function contentnotes_db_get_user_prefs(int $uid): array
     if ($uid <= 0) {
         return [];
     }
-    if (isset($memo[$uid])) {
+    if (!$refresh && isset($memo[$uid])) {
         return $memo[$uid];
     }
 
@@ -440,7 +441,7 @@ function contentnotes_db_get_user_prefs(int $uid): array
  * Speichert die Vorlieben eines Mitglieds (ersetzt alle bisherigen).
  *
  * @param int   $uid          Mitglieds-ID
- * @param array $cid_to_mode  cid => Modus (0 = Warnung, 1 = einblenden)
+ * @param array $cid_to_mode  cid => Modus (0 = Warnung, 1 = einblenden, 2 = komplett ausblenden)
  * @return void
  */
 function contentnotes_db_save_user_prefs(int $uid, array $cid_to_mode): void
@@ -461,9 +462,11 @@ function contentnotes_db_save_user_prefs(int $uid, array $cid_to_mode): void
         $db->insert_query('contentnotes_userprefs', [
             'uid'  => $uid,
             'cid'  => $cid,
-            'mode' => ((int)$mode === 1) ? 1 : 0,
+            'mode' => contentnotes_normalize_mode($mode),
         ]);
     }
+
+    contentnotes_db_get_user_prefs($uid, true); // gemerkten Stand aktualisieren
 }
 
 /**
@@ -479,6 +482,9 @@ function contentnotes_db_delete_user_prefs(array $uids): void
     $uids = array_values(array_unique(array_filter(array_map('intval', $uids))));
     if ($uids) {
         $db->delete_query('contentnotes_userprefs', 'uid IN (' . implode(',', $uids) . ')');
+        foreach ($uids as $uid) {
+            contentnotes_db_get_user_prefs($uid, true); // gemerkten Stand aktualisieren
+        }
     }
 }
 
@@ -535,28 +541,75 @@ function contentnotes_describe_notes(array $cid_to_note): array
 }
 
 /**
- * Öffentliche API: Soll der aktuelle Betrachtende bei diesen Kategorien eine Warnung sehen?
- * Gäste immer; Mitglieder, sobald für mindestens eine Kategorie kein Eintrag oder Modus 0 gilt.
+ * Begrenzt einen Modus auf die erlaubten Werte: 0 = Warnung, 1 = einblenden, 2 = komplett ausblenden.
+ *
+ * @param mixed $mode Rohwert
+ * @return int
+ */
+function contentnotes_normalize_mode($mode): int
+{
+    $mode = (int)$mode;
+
+    return ($mode === 1 || $mode === 2) ? $mode : 0;
+}
+
+/**
+ * Was soll der aktuelle Betrachtende bei diesen Kategorien sehen?
+ *
+ * Die strengste Stufe gewinnt: hide > warn > show. Gäste bekommen immer die Warnung (nie
+ * „ausblenden“); eine Kategorie ohne Eintrag zählt als Warnung. Ohne Kategorien: show.
+ *
+ * @param array $cids Kategorie-IDs
+ * @return string 'hide', 'warn' oder 'show'
+ */
+function contentnotes_viewer_action(array $cids): string
+{
+    global $mybb;
+
+    if (!$cids) {
+        return 'show';
+    }
+
+    $uid = (int)($mybb->user['uid'] ?? 0);
+    if ($uid <= 0) {
+        return 'warn';
+    }
+
+    $prefs  = contentnotes_db_get_user_prefs($uid);
+    $result = 'show';
+    foreach ($cids as $cid) {
+        $mode = isset($prefs[(int)$cid]) ? contentnotes_normalize_mode($prefs[(int)$cid]) : 0;
+        if ($mode === 2) {
+            return 'hide';
+        }
+        if ($mode === 0) {
+            $result = 'warn';
+        }
+    }
+
+    return $result;
+}
+
+/**
+ * Öffentliche API: Soll der aktuelle Betrachtende bei diesen Kategorien eine (klickbare) Warnung sehen?
+ * Gäste immer; Mitglieder, wenn die strengste Stufe „Warnung“ ist (kein Eintrag zählt als Warnung).
  *
  * @param array $cids Kategorie-IDs
  * @return bool
  */
 function contentnotes_viewer_wants_warning(array $cids): bool
 {
-    global $mybb;
+    return contentnotes_viewer_action($cids) === 'warn';
+}
 
-    $uid = (int)($mybb->user['uid'] ?? 0);
-    if ($uid <= 0) {
-        return true;
-    }
-
-    $prefs = contentnotes_db_get_user_prefs($uid);
-    foreach ($cids as $cid) {
-        $cid = (int)$cid;
-        if (!isset($prefs[$cid]) || (int)$prefs[$cid] !== 1) {
-            return true;
-        }
-    }
-
-    return false;
+/**
+ * Öffentliche API: Soll der aktuelle Betrachtende diese Kategorien komplett ausgeblendet bekommen?
+ * Gäste nie.
+ *
+ * @param array $cids Kategorie-IDs
+ * @return bool
+ */
+function contentnotes_viewer_hides(array $cids): bool
+{
+    return contentnotes_viewer_action($cids) === 'hide';
 }

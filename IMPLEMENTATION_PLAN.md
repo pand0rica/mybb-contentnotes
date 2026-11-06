@@ -242,3 +242,13 @@ Alle 11 Schritte sind umgesetzt und abgehakt. Getestet gegen eine echte MyBB-1.8
 Fremd-Themes, Threaded-Ansicht des Threads (Banner/Verdecken gelten nur für den linearen Modus, Posts
 mit eigener Warnung funktionieren in beiden), mobile Ansicht, ein visueller ACP-Klickdurchgang durch
 einen Menschen (ACP wurde per HTTP geprüft).
+
+---
+
+## Nachtrag: dritte Einstellung „Komplett ausblenden" (Modus 2)
+
+Umgesetzt und getestet: Modus 2 in DB-Schicht/UserCP/Sprachdateien, Rangfolge hide > warn > show (`contentnotes_viewer_action()`),
+Textstellen spurlos entfernt, Thread-Zeilen und Posts per Marker + `pre_output_page` entfernt, direkter Thread-Aufruf zeigt einen Hinweis,
+Vorschau blendet nie aus. Tests: `tests/cli-selftest.php` 149 passed (inkl. Rangfolge-Matrix, Parser, Marker, Ausgabefilter), HTTP-Durchlauf
+„Ausblenden" (32 Prüfungen: UserCP, Forenansicht, Suche, Direktaufruf, Post, Textstelle, Gast, Vorschau), ACP (30) und Frontend (72) weiter grün.
+Neue Screenshots: `usercp-settings-hide`, `forumdisplay-hidden`, `thread-hidden-notice`, `post-hidden`.

@@ -27,10 +27,16 @@ $l['contentnotes_editor_none'] = "There are no content note categories yet.";
 // User CP
 $l['contentnotes_usercp_menu_item'] = "Content Notes";
 $l['contentnotes_usercp_title'] = "Content Notes";
-$l['contentnotes_usercp_intro'] = "Choose for each category how marked content is shown to you: behind a warning you can click, or directly without a warning.";
+$l['contentnotes_usercp_intro'] = "Choose for each category how marked content is shown to you: behind a warning you can click, directly without a warning, or hidden completely.";
 $l['contentnotes_usercp_save'] = "Save settings";
 $l['contentnotes_usercp_saved'] = "Your content note settings have been saved.";
 $l['contentnotes_usercp_none'] = "There are no content note categories yet.";
 $l['contentnotes_mode_warn'] = "Show a warning first";
 $l['contentnotes_mode_show'] = "Show directly, without a warning";
+$l['contentnotes_mode_hide'] = "Hide completely";
 $l['contentnotes_disabled'] = "Content notes are currently turned off.";
+
+// Komplett ausblenden
+$l['contentnotes_thread_hidden_title'] = "Hidden by your settings";
+$l['contentnotes_thread_hidden_message'] = "This content is hidden because of your content note settings. You can change this in <a href=\"usercp.php?action=contentnotes\">your Content Notes settings</a>.";
+$l['contentnotes_post_hidden_fallback'] = "Post hidden according to your content note settings.";

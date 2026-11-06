@@ -27,6 +27,101 @@ function contentnotes_load_lang(): void
 }
 
 /**
+ * Position des letzten öffnenden Tags `<name …>` vor $pos (oder false).
+ *
+ * @param string $html Seite
+ * @param int    $pos  Suche endet vor dieser Position
+ * @param string $name Tag-Name, z.B. 'tr' oder 'div'
+ * @return int|false
+ */
+function contentnotes_find_open_tag_before(string $html, int $pos, string $name)
+{
+    $needle = '<' . $name;
+    $head   = substr($html, 0, $pos);
+
+    while (($start = strripos($head, $needle)) !== false) {
+        $next = substr($head, $start + strlen($needle), 1);
+        if ($next === ' ' || $next === '>' || $next === "\t" || $next === "\n" || $next === "\r") {
+            return $start;
+        }
+        $head = substr($head, 0, $start);
+    }
+
+    return false;
+}
+
+/**
+ * Entfernt Elemente, die für den Betrachtenden komplett ausgeblendet sind:
+ * Thread-Zeilen (Marker steht in der `<tr>`) und Posts (Marker steht im Post-Container).
+ * Lässt sich ein Element nicht sicher abgrenzen, wird nur der Marker entfernt (bei Posts bleibt dann
+ * die kurze Hinweiszeile statt der Nachricht stehen, es wird also nie Inhalt ausgeliefert).
+ *
+ * @param string $html Fertige Seite
+ * @return string
+ */
+function contentnotes_strip_hidden(string $html): string
+{
+    // Thread-Zeilen
+    $guard = 0;
+    while ($guard++ < 500 && preg_match('/<!--contentnotes-hide-thread:(\d+)-->/', $html, $m, PREG_OFFSET_CAPTURE)) {
+        $pos   = $m[0][1];
+        $len   = strlen($m[0][0]);
+        $start = contentnotes_find_open_tag_before($html, $pos, 'tr');
+        $end   = stripos($html, '</tr>', $pos);
+
+        if ($start === false || $end === false) {
+            $html = substr_replace($html, '', $pos, $len);
+            continue;
+        }
+        $html = substr_replace($html, '', $start, $end + 5 - $start);
+    }
+
+    // Posts
+    $guard = 0;
+    while ($guard++ < 500 && preg_match('/<!--contentnotes-hide-post:(\d+)-->/', $html, $m, PREG_OFFSET_CAPTURE)) {
+        $pos = $m[0][1];
+        $len = strlen($m[0][0]);
+        $pid = (int)$m[1][0];
+
+        $removed = false;
+        $id_pos  = strpos($html, 'id="post_' . $pid . '"');
+        if ($id_pos !== false && $id_pos < $pos) {
+            $start = contentnotes_find_open_tag_before($html, $id_pos, 'div');
+            if ($start !== false && $start < $pos) {
+                // Ende des Post-Containers per Div-Balance suchen
+                $depth  = 0;
+                $offset = $start;
+                $end    = false;
+                while (preg_match('#<(/?)div\b[^>]*>#i', $html, $t, PREG_OFFSET_CAPTURE, $offset)) {
+                    $depth  += ($t[1][0] === '/') ? -1 : 1;
+                    $offset  = $t[0][1] + strlen($t[0][0]);
+                    if ($depth === 0) {
+                        $end = $offset;
+                        break;
+                    }
+                }
+
+                if ($end !== false && $end > $pos) {
+                    // Davorstehenden Anker <a name="pidN" id="pidN"></a> mitnehmen
+                    $before = substr($html, max(0, $start - 120), min(120, $start));
+                    if (preg_match('#<a name="pid' . $pid . '" id="pid' . $pid . '"></a>\s*$#', $before, $a)) {
+                        $start -= strlen($a[0]);
+                    }
+                    $html    = substr_replace($html, '', $start, $end - $start);
+                    $removed = true;
+                }
+            }
+        }
+
+        if (!$removed) {
+            $html = substr_replace($html, '', $pos, $len);
+        }
+    }
+
+    return $html;
+}
+
+/**
  * Hook pre_output_page: bindet das Script ein und stellt dem Editor die Kategorien bereit.
  *
  * Bewusst am Ausgabe-Hook statt an global_intermediate: $headerinclude wird in global.php erst
@@ -39,7 +134,16 @@ function contentnotes_handle_output($contents)
 {
     global $mybb, $lang;
 
-    if (!is_string($contents) || !contentnotes_is_enabled() || strpos($contents, '</head>') === false) {
+    if (!is_string($contents)) {
+        return $contents;
+    }
+
+    // Komplett ausgeblendete Threads/Posts aus der fertigen Seite entfernen
+    if (strpos($contents, '<!--contentnotes-hide-') !== false) {
+        $contents = contentnotes_strip_hidden($contents);
+    }
+
+    if (!contentnotes_is_enabled() || strpos($contents, '</head>') === false) {
         return $contents;
     }
     if (strpos($contents, '/jscripts/contentnotes.js') !== false) {
@@ -149,6 +253,13 @@ function contentnotes_handle_thread_badge(): void
         return;
     }
 
+    // „Komplett ausblenden“: Zeile später aus der fertigen Seite entfernen (Marker in der Zeile)
+    if (contentnotes_viewer_hides(array_column($described, 'cid'))) {
+        $thread['contentnotes_badge'] = '<!--contentnotes-hide-thread:' . $tid . '-->';
+
+        return;
+    }
+
     contentnotes_load_lang();
 
     $names  = [];
@@ -201,8 +312,15 @@ function contentnotes_handle_showthread_start(): void
         return;
     }
 
+    $action = contentnotes_viewer_action(array_column($described, 'cid'));
+
+    // Komplett ausblenden: direkter Aufruf zeigt nur einen Hinweis
+    if ($action === 'hide') {
+        error($lang->contentnotes_thread_hidden_message, $lang->contentnotes_thread_hidden_title);
+    }
+
     // Alle Kategorien auf „einblenden“: weder Kasten noch Verdecken
-    if (!contentnotes_viewer_wants_warning(array_column($described, 'cid'))) {
+    if ($action !== 'warn') {
         return;
     }
 
@@ -212,22 +330,38 @@ function contentnotes_handle_showthread_start(): void
 }
 
 /**
- * Verdeckt die Nachricht eines Posts hinter einem Warnkopf (wenn der Betrachtende das möchte).
+ * Wendet die Einstellung des Betrachtenden auf einen Post an: einblenden (unverändert), Warnkopf mit
+ * verdeckter Nachricht oder komplett ausblenden (Marker; der Post wird aus der fertigen Seite entfernt).
  *
- * @param array $post       Post-Daten (message wird ersetzt)
+ * @param array $post        Post-Daten (message wird ersetzt)
  * @param array $cid_to_note cid => Freitext
+ * @param bool  $allow_hide  false = „ausblenden“ wie „Warnung“ behandeln (Vorschau: Autor*innen sehen den Text)
  * @return void
  */
-function contentnotes_veil_post(array &$post, array $cid_to_note): void
+function contentnotes_veil_post(array &$post, array $cid_to_note, bool $allow_hide = true): void
 {
     global $templates, $lang, $mybb, $theme;
 
     $described = contentnotes_describe_notes($cid_to_note);
-    if (!$described || !contentnotes_viewer_wants_warning(array_column($described, 'cid'))) {
+    if (!$described) {
+        return;
+    }
+
+    $action = contentnotes_viewer_action(array_column($described, 'cid'));
+    if ($action === 'show') {
         return;
     }
 
     contentnotes_load_lang();
+
+    if ($action === 'hide' && $allow_hide) {
+        // Die Nachricht wird nie ausgeliefert. Der Marker lässt den ganzen Post entfernen; klappt das
+        // nicht (unausgeglichenes HTML), bleibt nur diese Hinweiszeile stehen.
+        $post['message'] = '<!--contentnotes-hide-post:' . (int)($post['pid'] ?? 0) . '-->'
+            . '<div class="contentnotes_hidden_note smalltext">' . htmlspecialchars_uni((string)$lang->contentnotes_post_hidden_fallback) . '</div>';
+
+        return;
+    }
 
     $items   = contentnotes_render_note_items($described);
     $message = (string)($post['message'] ?? '');
@@ -280,6 +414,6 @@ function contentnotes_handle_postbit_preview(&$post): void
 
     $input = contentnotes_filter_input(contentnotes_read_input(), contentnotes_db_get_categories());
     if ($input) {
-        contentnotes_veil_post($post, $input);
+        contentnotes_veil_post($post, $input, false);
     }
 }
