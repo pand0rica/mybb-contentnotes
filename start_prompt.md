@@ -3,7 +3,7 @@
 Du setzt das MyBB-1.8-Plugin **Content Notes** (Codename `contentnotes`) um. Das
 Umsetzungs-Paket aus Phase 1 liegt bereits vollständig im Repo:
 
-  <Plugin-Repo> (GitHub: pand0rica/mybb-contentnotes)
+  Repo `pand0rica/mybb-contentnotes` (lokaler Checkout in deiner Umgebung)
 
 Lies in dieser Reihenfolge, BEVOR du irgendetwas tust:
 1. `AGENTS.md` (dieses Repo) – Pointer aufs Dev-Kit, 5 goldene Regeln, Phasen-Zuordnung.

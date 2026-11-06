@@ -1,0 +1,174 @@
+[size=x-large][b]Content Notes[/b][/size]
+[i]Version 1.0.0[/i] – Inhaltswarnungen für Threads, einzelne Beiträge und einzelne Textstellen: Das Team legt Kategorien fest, und jede*r entscheidet selbst, ob solche Inhalte hinter einer Warnung, direkt oder gar nicht angezeigt werden.
+
+[size=large][b]Worum geht's?[/b][/size]
+
+In vielen Foren kommen Themen vor, die nicht alle lesen möchten: Gewalt, Sucht, Tod, Trauer. Ein Hinweis im Beitragstext wird schnell übersehen, und jeder Thread braucht seine eigene Lösung. Content Notes macht daraus ein einheitliches System: Das Team definiert Kategorien, Schreibende kennzeichnen Inhalte mit wenigen Klicks, und Lesende stellen pro Kategorie ein, wie sie damit umgehen möchten.
+
+[size=large][b]Highlights[/b][/size]
+
+[list]
+[*] [b]Drei Ebenen:[/b] ganze Threads, einzelne Beiträge und einzelne Textstellen mitten im Satz
+[*] [b]Jede*r entscheidet selbst:[/b] pro Kategorie Warnung anzeigen, direkt anzeigen oder komplett ausblenden
+[*] [b]Lesbar bleiben:[/b] Textstellen stehen im Lesefluss, nur das Markierte ist verschwommen
+[*] [b]Mehrere Kategorien pro Inhalt,[/b] jeweils mit eigenem kurzem Hinweistext
+[*] [b]Ohne JavaScript bleibt alles lesbar,[/b] und es werden keine Core-Dateien verändert
+[/list]
+
+[size=large][b]Was das Plugin alles kann[/b][/size]
+
+[b]Für Mitglieder (Lesende)[/b]
+[list]
+[*][b]Eigene Einstellung pro Kategorie[/b] – Du wählst „Zuerst eine Warnung anzeigen“ (Standard), „Direkt ohne Warnung anzeigen“ oder „Komplett ausblenden“. Gilt für Threads, Beiträge und Textstellen gleichermaßen. [i](Benutzer-CP → Inhaltswarnungen)[/i]
+[*][b]Hinweis in Listen[/b] – Markierte Threads tragen hinter dem Titel ein kleines Label mit den Kategorien, in der Forenansicht und in den Suchergebnissen. Wer etwas auf „Komplett ausblenden“ gestellt hat, sieht diese Threads dort gar nicht mehr. [i](Forenansicht, Suche)[/i]
+[*][b]Warnkasten im Thread[/b] – Du siehst die Kategorien samt Hinweistexten und entscheidest per Klick auf „Inhalt anzeigen“, ob du weiterliest. [i](Thread-Ansicht)[/i]
+[*][b]Warnung an einzelnen Beiträgen[/b] – Nur der betroffene Beitrag ist verdeckt, die anderen bleiben lesbar. Mit „Komplett ausblenden“ fehlt der Beitrag in deiner Ansicht. [i](Thread-Ansicht)[/i]
+[*][b]Textstellen im Lesefluss[/b] – Ein kleines Label sagt, worum es geht, der Text dahinter ist verschwommen. Ein Klick (oder Enter) deckt ihn auf; mit „Komplett ausblenden“ verschwindet die Stelle spurlos und der Satz liest sich ohne sie weiter. [i](in jedem Beitrag)[/i]
+[*][b]Klare Regeln bei mehreren Kategorien[/b] – Es gilt die strengste Einstellung: ausblenden vor Warnung vor direkt anzeigen. Gäste sehen immer die Warnung.
+[/list]
+
+[b]Für alle, die Beiträge schreiben (berechtigte Gruppen)[/b]
+[list]
+[*][b]Kategorien beim Schreiben wählen[/b] – Im Bereich „Inhaltswarnungen“ hakst du eine oder mehrere Kategorien an und ergänzt je Kategorie optional einen kurzen Hinweis (bis 255 Zeichen). Beim Erstellen eines Threads gilt die Auswahl für den ganzen Thread, bei Antworten für den einzelnen Beitrag. [i](Neuer Thread, Antworten, Schnellantwort, Beitrag bearbeiten)[/i]
+[*][b]Warnung nachträglich ändern oder entfernen[/b] – Beim Bearbeiten ist die Auswahl vorbelegt; der erste Beitrag eines Threads steuert die Thread-Warnung. [i](Beitrag bearbeiten)[/i]
+[*][b]Textstellen markieren[/b] – Mit dem Warn-Button im Editor wählst du Kategorie und Hinweis, der markierte Text wird eingeschlossen. Von Hand geht es mit [code][cw=kuerzel|Hinweis]Text[/cw][/code]. [i](Editor)[/i]
+[*][b]Vorschau zeigt alles[/b] – In der Vorschau wird nie etwas ausgeblendet, du siehst, was du schreibst.
+[/list]
+
+[b]Für Administratoren[/b]
+[list]
+[*][b]Kategorien verwalten[/b] – Name, Kürzel für den MyCode, Beschreibung (erscheint im Benutzer-CP), aktiv/inaktiv und Sortierung. Inaktive Kategorien lassen sich nicht mehr wählen, bestehende Markierungen wirken weiter. [i](ACP → Konfiguration → Content Notes)[/i]
+[*][b]Sicher löschen[/b] – Löschen, Aktivieren und Deaktivieren fragen nach; beim Löschen verschwinden auch die Markierungen und die Einstellungen der Mitglieder zu dieser Kategorie. Alle Änderungen landen im Admin-Log.
+[*][b]Wer darf markieren und wo[/b] – Berechtigte Gruppen und Foren legst du in den Einstellungen fest. [i](ACP → Konfiguration → Einstellungen → Content Notes)[/i]
+[/list]
+
+[b]Läuft automatisch[/b]
+[list]
+[*][b]Aufräumen[/b] – Wird ein Thread oder Beitrag gelöscht, verschwinden seine Markierungen; wird ein Account gelöscht, auch dessen Einstellungen.
+[*][b]RSS und E-Mail[/b] – In Klartext-Ausgaben steht statt der markierten Stelle „[Inhaltswarnung: Kategorie]“.
+[/list]
+
+[size=large][b]So sieht's aus[/b][/size]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/acp-categories-list.png[/img]
+[i]Kategorien im ACP: Name, Kürzel, Beschreibung, Status, Sortierung und wie oft eine Kategorie verwendet wird.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/acp-category-add.png[/img]
+[i]Eine Kategorie anlegen.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/acp-category-add-errors.png[/img]
+[i]Das Formular prüft Eingaben und sagt, was fehlt.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/acp-category-edit.png[/img]
+[i]Kategorie bearbeiten.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/acp-category-delete-confirm.png[/img]
+[i]Löschen, Aktivieren und Deaktivieren fragen vorher nach.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/acp-settings.png[/img]
+[i]Die Einstellungen des Plugins.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/newthread-form.png[/img]
+[i]Beim Schreiben: aufklappbarer Bereich „Inhaltswarnungen“ mit Kategorie und optionalem Hinweis.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/editor-button-dropdown.png[/img]
+[i]Der Editor-Button für Textstellen: Kategorie wählen, Hinweis eintragen, einfügen.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/forumdisplay-badges.png[/img]
+[i]In der Forenansicht: Hinweis mit den Kategorien hinter dem Threadtitel.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/search-results-badge.png[/img]
+[i]Derselbe Hinweis in den Suchergebnissen.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/thread-warning-collapsed.png[/img]
+[i]Im Thread: Warnkasten, die Beiträge bleiben bis zum Klick auf „Inhalt anzeigen“ verdeckt.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/thread-revealed.png[/img]
+[i]Nach dem Klick sind die Beiträge sichtbar; einzelne Textstellen bleiben verschwommen.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/post-warning.png[/img]
+[i]Warnung an einem einzelnen Beitrag.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/post-warning-revealed.png[/img]
+[i]Derselbe Beitrag nach dem Aufdecken.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/inline-warning-blurred.png[/img]
+[i]Textstelle im Lesefluss: kleines Label und verschwommener Text.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/inline-warning-revealed.png[/img]
+[i]Ein Klick auf die Stelle deckt sie auf.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/usercp-menu.png[/img]
+[i]Der Menüpunkt im Benutzer-CP.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/usercp-settings-default.png[/img]
+[i]Benutzer-CP, Standard: bei jeder Kategorie zuerst eine Warnung.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/usercp-settings-customised.png[/img]
+[i]Eigene Auswahl: einzelne Kategorien direkt anzeigen oder ganz ausblenden.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/usercp-settings-hide.png[/img]
+[i]Die dritte Möglichkeit: „Komplett ausblenden“.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/thread-partially-shown.png[/img]
+[i]Gemischte Einstellung: nur die Kategorien mit Warnung zeigen einen Hinweis.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/thread-no-warning.png[/img]
+[i]Kategorie auf „Direkt ohne Warnung anzeigen“: der Thread erscheint ohne Warnkasten.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/forumdisplay-hidden.png[/img]
+[i]„Komplett ausblenden“: der Thread fehlt in der Forenansicht.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/thread-hidden-notice.png[/img]
+[i]Wer ihn trotzdem direkt aufruft, sieht nur einen kurzen Hinweis mit Link zu den Einstellungen.[/i]
+
+[img]https://raw.githubusercontent.com/pand0rica/mybb-contentnotes/main/docs/screenshots/post-hidden.png[/img]
+[i]Ausgeblendete Beiträge fehlen im Thread; die übrigen bleiben unverändert.[/i]
+
+[size=large][b]Einstellungen[/b][/size]
+
+[list]
+[*][b]Inhaltswarnungen aktivieren[/b] – Schaltet die Funktionen im Forum ein oder aus. Ausgeschaltet bleiben [code][cw][/code]-Stellen als normaler Text stehen. [i](Standard: Ja)[/i]
+[*][b]Gruppen, die Inhaltswarnungen setzen dürfen[/b] – Diese Gruppen dürfen Warnungen an Threads und Beiträgen setzen, ändern, entfernen und sehen den Editor-Button. [i](Standard: Administratoren)[/i]
+[*][b]Foren mit Thread- und Beitragswarnungen[/b] – In diesen Foren werden die Felder beim Schreiben und Bearbeiten angeboten. [i](Standard: alle Foren)[/i]
+[*][b]Editor-Button anzeigen[/b] – Fügt den berechtigten Gruppen den Button im Editor hinzu. [i](Standard: Ja)[/i]
+[/list]
+
+[size=large][b]Voraussetzungen[/b][/size]
+
+[list]
+[*] MyBB 1.8.x (entwickelt und getestet mit 1.8.41)
+[*] PHP 7.4 oder 8.x (getestet mit PHP 8.3; 7.4 ungetestet, es wird keine PHP-8-only-Syntax verwendet)
+[*] Keine weiteren Abhängigkeiten
+[/list]
+
+[size=large][b]Installation[/b][/size]
+
+[list=1]
+[*] Dateien in das MyBB-Stammverzeichnis kopieren (Ordnerstruktur beibehalten)
+[*] ACP → Konfiguration → Plugins → Content Notes → Installieren & aktivieren
+[*] ACP → Konfiguration → Einstellungen → Content Notes → berechtigte Gruppen und Foren festlegen
+[*] ACP → Konfiguration → Content Notes → Kategorie hinzufügen
+[/list]
+
+Zum Entfernen: Deaktivieren und Deinstallieren; dabei werden auch alle Tabellen, Einstellungen, Templates und Stylesheets des Plugins gelöscht. Bloßes Deaktivieren behält Daten und Einstellungen.
+
+[size=large][b]Für die Entwicklung[/b][/size]
+
+[list]
+[*] Öffentliche Funktionen: [code]contentnotes_get_notes($type, $id)[/code] (prüft keine Leserechte), [code]contentnotes_viewer_action(array $cids)[/code] (liefert hide, warn oder show für den aktuellen Betrachtenden), [code]contentnotes_viewer_wants_warning()[/code], [code]contentnotes_viewer_hides()[/code]
+[*] Eigener Hook [code]contentnotes_notes_saved[/code] nach dem Speichern von Markierungen
+[/list]
+
+[size=large][b]Grenzen & Ausblick[/b][/size]
+
+„Komplett ausblenden“ entfernt Elemente nur aus der fertigen Seite: Zähler, Seitenumbruch und Beitragsnummern bleiben unverändert, und Titel können an Stellen auftauchen, die das Plugin nicht anfasst (Index „Letzter Beitrag“, Portal, Abo-Listen, Zitate). Das schnelle Bearbeiten direkt im Thread ändert keine Warnungen, dafür gibt es den normalen Editor. Bei verschachtelten Threads (Threaded-Modus) fehlt der Warnkasten des Threads, Warnungen an einzelnen Beiträgen funktionieren dort. Das Aufdecken gilt nur für den aktuellen Seitenaufruf. Ungetestet: andere Themes, MySQL (getestet mit MariaDB), PHP 7.4 und die mobile Ansicht.
+
+[size=small]Fragen, Bugs oder Feature-Wünsche bitte hier im Thread melden.
+Ich freue mich, wenn ihr mir den Link dalasst, wo das Plugin verwendet wird.[/size]
+
+[align=center][size=20][url=https://github.com/pand0rica/mybb-contentnotes]Download[/url][/size]
+
+<a href='https://ko-fi.com/W7W51WSR23' target='_blank'><img height='36' style='border:0px;height:36px;' src='https://storage.ko-fi.com/cdn/kofi5.png?v=6' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>[/align]
+
+Über eine freiwillige kleine Spende freue ich mich immer sehr ❤

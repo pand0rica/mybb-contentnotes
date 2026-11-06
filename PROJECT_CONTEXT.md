@@ -42,8 +42,8 @@ anklickbare Warnung sehen oder den Inhalt direkt ohne Warnung angezeigt bekommen
   - *Post*: der ganze Beitrag (Container + Anker) wird aus der Thread-Ansicht entfernt.
   - *Textstelle* `[cw]…[/cw]`: spurlos entfernt (kein Label, kein Text), der Satz liest sich ohne die Stelle weiter.
   - Die **Vorschau** (`postbit_prev`) blendet nie aus (wie Warnung), Klartext-Kontexte (RSS/E-Mail) bleiben „[Inhaltswarnung: …]".
-  - Technik: Handler schreiben Marker-Kommentare (`<!--contentnotes-hide-thread:TID-->` in die Thread-Zeile über `$thread['contentnotes_badge']`,
-    `<!--contentnotes-hide-post:PID-->` in `$post['message']`); `contentnotes_handle_output()` (`pre_output_page`) entfernt das
+  - Technik: Handler schreiben Marker-Kommentare mit Request-Token (`<!--contentnotes-hide-thread:TID:TOKEN-->` in die Thread-Zeile über `$thread['contentnotes_badge']`,
+    `<!--contentnotes-hide-post:PID:TOKEN-->` in `$post['message']`; der zufällige Token pro Request verhindert, dass ein Beitrag mit erlaubtem HTML fremde Elemente entfernen lässt); `contentnotes_handle_output()` (`pre_output_page`) entfernt das
     umgebende `<tr>` bzw. den Post-Container (Div-Balance-Scanner). Die Nachricht eines ausgeblendeten Posts wird **nie** ausgeliefert:
     lässt sich der Container nicht sicher abgrenzen, bleibt nur eine kurze Hinweiszeile stehen.
 
@@ -190,7 +190,8 @@ Keine. Kein anderes Plugin wird benötigt.
 - Inline-MyCode `[cw]`: wird für alle Beiträge geparst (Tippen lässt sich nicht verhindern);
   nur der Editor-Button ist an die Gruppe gebunden.
 - UserCP-Seite: Login-Pflicht (`error_no_permission()` für Gäste).
-- ACP: eigene Admin-Permission `contentnotes` über `admin_config_permissions`.
+- ACP: eigene Admin-Permission `contentnotes` über `admin_config_permissions`. Schreibende ACP-Handler laufen nur unter POST (den Key prüft `admin/index.php`);
+  Aktivieren/Deaktivieren/Löschen über `$page->output_confirm_action()` (kein eigener Key-Helper, keine schreibenden GET-Links).
 
 ## Verifizierte MyBB-Core-Fakten (Stand 1.8.41, Branch `feature` von mybb/mybb)
 - Für 1.8 gegen `feature` oder einen `mybb_18xx`-Branch prüfen (`master` ist 1.6.x).

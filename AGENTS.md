@@ -8,17 +8,15 @@ Dieses Repo wird mit dem **MyBB Plugin Dev Kit** entwickelt. Bevor du hier etwas
 2. Lies dann in diesem Repo: `PROJECT_CONTEXT.md` (Kontext) und – in der Umsetzungsphase –
    `IMPLEMENTATION_PLAN.md` (die Arbeitsschritte).
 
-Das Dev-Kit wird **nicht** in dieses Repo kopiert, sondern referenziert. `<Dev-Kit>` ist der
-Ort, an dem das Kit in dieser Umgebung liegt (in Phase 1 eingesetzt). Liegt es nicht vor,
-frag danach, statt zu raten.
+Das Dev-Kit wird **nicht** in dieses Repo kopiert, sondern referenziert. `<Dev-Kit>` steht für den
+Ort der lokalen Kopie des Repos `pand0rica/mybb-devkit` in deiner Umgebung (bewusst kein fester Pfad:
+keine lokalen Pfade in Repo-Dateien, `conventions.md` §8). Liegt es nicht vor, frag danach, statt zu raten.
 
 ## Kurz-Kontext
 Inhaltswarnungen (Content Notes) für Threads, Posts und Textstellen (`[cw=kuerzel|Hinweis]…[/cw]`),
-Kategorien im ACP (Config-Modul), Einstellung pro Kategorie im Benutzer-CP (Warnung / einblenden).
+Kategorien im ACP (Config-Modul), Einstellung pro Kategorie im Benutzer-CP (Warnung / einblenden / komplett ausblenden).
 Architektur prozedural-modular, drei Tabellen. Details: `PROJECT_CONTEXT.md`.
 
-**Kit-Ort:** In Cloud-Sitzungen liegt das Kit unter `<Dev-Kit>`
-(Repo `pand0rica/mybb-devkit`). Lokal den Pfad entsprechend anpassen.
 
 ## Sprache
 Antworten Deutsch, Code/Bezeichner Englisch. PHP 7.4 + 8.x. Keine externen Libraries.

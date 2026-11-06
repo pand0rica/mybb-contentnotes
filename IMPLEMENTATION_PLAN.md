@@ -252,3 +252,13 @@ Textstellen spurlos entfernt, Thread-Zeilen und Posts per Marker + `pre_output_p
 Vorschau blendet nie aus. Tests: `tests/cli-selftest.php` 149 passed (inkl. Rangfolge-Matrix, Parser, Marker, Ausgabefilter), HTTP-Durchlauf
 „Ausblenden" (32 Prüfungen: UserCP, Forenansicht, Suche, Direktaufruf, Post, Textstelle, Gast, Vorschau), ACP (30) und Frontend (72) weiter grün.
 Neue Screenshots: `usercp-settings-hide`, `forumdisplay-hidden`, `thread-hidden-notice`, `post-hidden`.
+
+---
+
+## Review (Phase 3)
+
+Review durchgeführt (Findings im Review-Bericht): ACP-Modul auf die native Variante umgestellt (kein eigener Key-Helper, Umschalten über
+Bestätigungsseite, POST-only), Marker für „Ausblenden" mit Request-Token abgesichert, lokale Pfade aus den Pointer-Dateien entfernt, Begleitdateien
+(README, PLUGIN_POST.html, CHANGELOG, LICENSE, FUNDING.yml, .gitignore, .claudeignore) angelegt. Tests danach erneut grün
+(`tests/cli-selftest.php` 151 passed, ACP-/Frontend-/Ausblenden-HTTP-Durchläufe, Lifecycle).
+
