@@ -516,7 +516,7 @@ contentnotes_db_replace_notes('thread', 6101, [$violence => 'Folter', $addiction
 $thread      = ['tid' => 6101, 'subject' => 'x'];
 $threadcache = [6101 => $thread];
 contentnotes_handle_thread_badge();
-check('Badge hide: nur Marker, kein Inhalt', '<!--contentnotes-hide-thread:6101-->', $thread['contentnotes_badge'] ?? null);
+check('Badge hide: nur Marker, kein Inhalt', contentnotes_marker('thread', 6101), $thread['contentnotes_badge'] ?? null);
 as_user(0, '1');
 $thread = ['tid' => 6101, 'subject' => 'x'];
 contentnotes_handle_thread_badge();
@@ -527,7 +527,7 @@ contentnotes_db_delete_notes('thread', [6101]);
 // Post: Marker + Hinweiszeile, Nachricht wird nie ausgeliefert
 $post = ['pid' => 77, 'message' => '<p>GEHEIMER Inhalt</p>'];
 contentnotes_veil_post($post, [$violence => 'Folter']);
-check_true('Post hide: Marker + Fallbackzeile, Nachricht entfernt', strpos($post['message'], '<!--contentnotes-hide-post:77-->') === 0 && strpos($post['message'], 'GEHEIMER') === false && strpos($post['message'], 'contentnotes_hidden_note') !== false);
+check_true('Post hide: Marker + Fallbackzeile, Nachricht entfernt', strpos($post['message'], contentnotes_marker('post', 77)) === 0 && strpos($post['message'], 'GEHEIMER') === false && strpos($post['message'], 'contentnotes_hidden_note') !== false);
 $post = ['pid' => 77, 'message' => '<p>Inhalt</p>'];
 contentnotes_veil_post($post, [$violence => 'Folter'], false);
 check_true('Vorschau (allow_hide=false): Warnkopf statt Entfernen', strpos($post['message'], 'contentnotes_wrap') !== false && strpos($post['message'], 'hide-post') === false);
@@ -536,26 +536,31 @@ contentnotes_veil_post($post, [$addiction => '']);
 check('Post show: unverändert', '<p>Inhalt</p>', $post['message']);
 
 // Ausgabefilter
-$page = "<table>\n<tr class=\"inline_row\"><td>Thread A</td></tr>\n<tr class=\"inline_row\"><td><span id=\"tid_6\">Thread B</span> <!--contentnotes-hide-thread:6--></td></tr>\n<tr class=\"inline_row\"><td>Thread C</td></tr>\n</table>";
+$thread_marker = contentnotes_marker('thread', 6);
+$page = "<table>\n<tr class=\"inline_row\"><td>Thread A</td></tr>\n<tr class=\"inline_row\"><td><span id=\"tid_6\">Thread B</span> {$thread_marker}</td></tr>\n<tr class=\"inline_row\"><td>Thread C</td></tr>\n</table>";
 $out  = contentnotes_strip_hidden($page);
 check_true('Filter: markierte Thread-Zeile weg, Nachbarn bleiben', strpos($out, 'Thread B') === false && strpos($out, 'hide-thread') === false && strpos($out, 'Thread A') !== false && strpos($out, 'Thread C') !== false && substr_count($out, '<tr') === 2 && substr_count($out, '</tr>') === 2);
 
 $posts = '<a name="pid1" id="pid1"></a><div class="post " id="post_1"><div class="p">Post1</div></div>' . "\n"
-    . '<a name="pid2" id="pid2"></a><div class="post classic " style="" id="post_2"><div><div>verschachtelt</div></div><!--contentnotes-hide-post:2--><div class="contentnotes_hidden_note">fb</div></div>' . "\n"
+    . '<a name="pid2" id="pid2"></a><div class="post classic " style="" id="post_2"><div><div>verschachtelt</div></div>' . contentnotes_marker('post', 2) . '<div class="contentnotes_hidden_note">fb</div></div>' . "\n"
     . '<a name="pid3" id="pid3"></a><div class="post " id="post_3">Post3</div>';
 $out = contentnotes_strip_hidden($posts);
 check_true('Filter: Post samt Anker entfernt, Nachbarn intakt', strpos($out, 'post_2') === false && strpos($out, 'pid2') === false && strpos($out, 'verschachtelt') === false && strpos($out, 'Post1') !== false && strpos($out, 'Post3') !== false && strpos($out, 'pid1') !== false && strpos($out, 'pid3') !== false);
 check('Filter: Div-Balance der Reste stimmt', substr_count($out, '<div'), substr_count($out, '</div>'));
 check_true('Filter: kein Marker bleibt übrig', strpos($out, 'contentnotes-hide') === false);
 
-$broken = '<a name="pid4" id="pid4"></a><div class="post" id="post_4"><div>offen<!--contentnotes-hide-post:4--><div class="contentnotes_hidden_note">fb</div>';
+$broken = '<a name="pid4" id="pid4"></a><div class="post" id="post_4"><div>offen' . contentnotes_marker('post', 4) . '<div class="contentnotes_hidden_note">fb</div>';
 $out    = contentnotes_strip_hidden($broken);
 check_true('Filter: unausgeglichenes HTML ⇒ nur Marker weg, Hinweiszeile bleibt', strpos($out, 'hide-post') === false && strpos($out, 'contentnotes_hidden_note') !== false);
+
+$forged = '<div class="post" id="post_55">Fremder Beitrag</div><div class="post" id="post_56"><!--contentnotes-hide-post:55:0000000000000000-->eingeschmuggelt</div>';
+check_true('Filter: gefälschter Marker (falscher Token) entfernt nichts', strpos(contentnotes_strip_hidden($forged), 'Fremder Beitrag') !== false);
+check_true('Marker enthält Token', preg_match('/^<!--contentnotes-hide-post:12:[0-9a-f]{16}-->$/', contentnotes_marker('post', 12)) === 1);
 
 $plain = '<html><body>Nichts zu tun [cw] <!-- anderer Kommentar --></body></html>';
 check('Filter: ohne Marker unverändert', $plain, contentnotes_strip_hidden($plain));
 check('Ausgabe-Hook: ohne Marker/</head> unverändert', $plain, contentnotes_handle_output($plain));
-$page_with_marker = '<html><head></head><body><div class="post" id="post_9"><!--contentnotes-hide-post:9-->x</div>nach</body></html>';
+$page_with_marker = '<html><head></head><body><div class="post" id="post_9">' . contentnotes_marker('post', 9) . 'x</div>nach</body></html>';
 check_true('Ausgabe-Hook entfernt Marker auch ohne Script-Einbindung', strpos(contentnotes_handle_output($page_with_marker), 'post_9') === false);
 contentnotes_db_delete_user_prefs([795]);
 as_user(0, '1');

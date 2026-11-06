@@ -314,6 +314,8 @@ function contentnotes_handle_validate(&$handler): void
  */
 function contentnotes_save_for(string $type, int $refid, int $fid, bool $merge = false): void
 {
+    global $plugins;
+
     if ($refid <= 0 || !contentnotes_form_submitted() || !contentnotes_user_can_set($fid)) {
         return;
     }
@@ -328,7 +330,6 @@ function contentnotes_save_for(string $type, int $refid, int $fid, bool $merge =
         contentnotes_db_replace_notes($type, $refid, $input);
     }
 
-    global $plugins;
     $args = ['type' => $type, 'refid' => $refid, 'cids' => array_keys($input)];
     $plugins->run_hooks('contentnotes_notes_saved', $args);
 }

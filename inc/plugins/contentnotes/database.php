@@ -322,8 +322,6 @@ function contentnotes_db_get_post_notes_for_thread(int $tid): array
  */
 function contentnotes_db_replace_notes(string $type, int $refid, array $cid_to_note): void
 {
-    global $db;
-
     if (!contentnotes_valid_type($type) || $refid <= 0) {
         return;
     }
@@ -503,6 +501,7 @@ function contentnotes_handle_user_delete(&$userhandler): void
 
 /**
  * Öffentliche API: Markierungen eines Threads bzw. Posts mit Kategorie-Daten.
+ * Prüft **keine** Leserechte: ob der Thread bzw. Post sichtbar ist, muss die aufrufende Stelle sicherstellen.
  *
  * @param string $type  'thread' oder 'post'
  * @param int    $refid tid bzw. pid

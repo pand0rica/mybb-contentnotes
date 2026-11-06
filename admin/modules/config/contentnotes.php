@@ -15,22 +15,6 @@ $lang->load('contentnotes');
 $page->add_breadcrumb_item($lang->contentnotes, 'index.php?module=config-contentnotes');
 
 /**
- * Im ACP bricht verify_post_check() nicht ab, sondern gibt nur false zurück (Kit debugging.md
- * Punkt 23) – deshalb immer den Rückgabewert prüfen. Aufruf in jedem schreibenden Handler.
- *
- * @return void
- */
-function contentnotes_acp_verify_key(): void
-{
-    global $mybb, $lang;
-
-    if (!verify_post_check($mybb->get_input('my_post_key'), true)) {
-        flash_message($lang->contentnotes_invalid_key, 'error');
-        admin_redirect('index.php?module=config-contentnotes');
-    }
-}
-
-/**
  * Gibt die Tab-Navigation aus (nach output_header()).
  *
  * @param string $active Aktiver Tab: list, add oder edit
@@ -175,9 +159,8 @@ if ($action === 'add') {
     $errors = [];
     $data   = ['name' => '', 'slug' => '', 'description' => '', 'active' => 1, 'disporder' => 0];
 
+    // Schreibt nur unter POST: admin/index.php prüft den my_post_key selbst und stuft bei Fehler auf GET herunter
     if ($mybb->request_method === 'post') {
-        contentnotes_acp_verify_key();
-
         $data   = contentnotes_acp_read_form();
         $errors = contentnotes_acp_validate($data);
 
@@ -216,9 +199,8 @@ if ($action === 'edit') {
     $errors = [];
     $data   = $category;
 
+    // Schreibt nur unter POST: admin/index.php prüft den my_post_key selbst und stuft bei Fehler auf GET herunter
     if ($mybb->request_method === 'post') {
-        contentnotes_acp_verify_key();
-
         $data   = contentnotes_acp_read_form();
         $errors = contentnotes_acp_validate($data, $cid);
 
@@ -245,22 +227,37 @@ if ($action === 'edit') {
 }
 
 // ---------------------------------------------------------------------------------------
-// Aktiv/Inaktiv umschalten (schreibend: Key-Prüfung auch bei GET-Link)
+// Aktiv/Inaktiv umschalten (Bestätigungsseite, geschrieben wird nur unter POST)
 // ---------------------------------------------------------------------------------------
 if ($action === 'toggle') {
-    contentnotes_acp_verify_key();
-
     $category = contentnotes_db_get_category($cid);
     if ($category === null) {
         flash_message($lang->contentnotes_error_invalid_category, 'error');
         admin_redirect($list_url);
     }
 
-    contentnotes_db_update_category($cid, ['active' => empty($category['active']) ? 1 : 0]);
-    log_admin_action($cid, $category['name']);
+    if ($mybb->get_input('no')) {
+        admin_redirect($list_url);
+    }
 
-    flash_message(empty($category['active']) ? $lang->contentnotes_success_activated : $lang->contentnotes_success_deactivated, 'success');
-    admin_redirect($list_url);
+    $is_active = !empty($category['active']);
+
+    if ($mybb->request_method === 'post') {
+        contentnotes_db_update_category($cid, ['active' => $is_active ? 0 : 1]);
+        log_admin_action($cid, $category['name']);
+
+        flash_message($is_active ? $lang->contentnotes_success_deactivated : $lang->contentnotes_success_activated, 'success');
+        admin_redirect($list_url);
+    }
+
+    $page->output_confirm_action(
+        $list_url . '&amp;action=toggle&amp;cid=' . $cid,
+        $lang->sprintf(
+            $is_active ? $lang->contentnotes_confirm_deactivate : $lang->contentnotes_confirm_activate,
+            htmlspecialchars_uni($category['name'])
+        )
+    );
+    exit;
 }
 
 // ---------------------------------------------------------------------------------------
@@ -277,9 +274,8 @@ if ($action === 'delete') {
         admin_redirect($list_url);
     }
 
+    // Schreibt nur unter POST: admin/index.php prüft den my_post_key selbst und stuft bei Fehler auf GET herunter
     if ($mybb->request_method === 'post') {
-        contentnotes_acp_verify_key();
-
         contentnotes_db_delete_category($cid);
         log_admin_action($cid, $category['name']);
 
@@ -301,7 +297,6 @@ if ($action === 'update_order') {
     if ($mybb->request_method !== 'post') {
         admin_redirect($list_url);
     }
-    contentnotes_acp_verify_key();
 
     $orders = $mybb->get_input('disporder', MyBB::INPUT_ARRAY);
     foreach (contentnotes_db_get_categories() as $category_id => $category) {
@@ -356,7 +351,7 @@ foreach ($categories as $category_id => $category) {
         ['class' => 'align_center']
     );
     $table->construct_cell(
-        '<a href="' . $list_url . '&amp;action=toggle&amp;cid=' . (int)$category_id . '&amp;my_post_key=' . $mybb->post_code . '">'
+        '<a href="' . $list_url . '&amp;action=toggle&amp;cid=' . (int)$category_id . '">'
         . ($active ? $lang->contentnotes_deactivate : $lang->contentnotes_activate) . '</a>',
         ['class' => 'align_center']
     );

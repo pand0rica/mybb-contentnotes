@@ -27,6 +27,39 @@ function contentnotes_load_lang(): void
 }
 
 /**
+ * Geheimer Token pro Request: Er macht die Marker unfälschbar. Ein Beitrag mit erlaubtem HTML kann
+ * sonst einen Marker einschmuggeln und damit fremde Threads/Posts aus der Seite entfernen lassen.
+ *
+ * @return string
+ */
+function contentnotes_hide_token(): string
+{
+    static $token = null;
+
+    if ($token === null) {
+        try {
+            $token = bin2hex(random_bytes(8));
+        } catch (Exception $e) {
+            $token = md5(uniqid((string)mt_rand(), true));
+        }
+    }
+
+    return $token;
+}
+
+/**
+ * Marker-Kommentar für „komplett ausblenden“ (wird in contentnotes_strip_hidden() ausgewertet).
+ *
+ * @param string $type 'thread' oder 'post'
+ * @param int    $id   tid bzw. pid
+ * @return string
+ */
+function contentnotes_marker(string $type, int $id): string
+{
+    return '<!--contentnotes-hide-' . $type . ':' . $id . ':' . contentnotes_hide_token() . '-->';
+}
+
+/**
  * Position des letzten öffnenden Tags `<name …>` vor $pos (oder false).
  *
  * @param string $html Seite
@@ -63,7 +96,7 @@ function contentnotes_strip_hidden(string $html): string
 {
     // Thread-Zeilen
     $guard = 0;
-    while ($guard++ < 500 && preg_match('/<!--contentnotes-hide-thread:(\d+)-->/', $html, $m, PREG_OFFSET_CAPTURE)) {
+    while ($guard++ < 500 && preg_match('/<!--contentnotes-hide-thread:(\d+):' . preg_quote(contentnotes_hide_token(), '/') . '-->/', $html, $m, PREG_OFFSET_CAPTURE)) {
         $pos   = $m[0][1];
         $len   = strlen($m[0][0]);
         $start = contentnotes_find_open_tag_before($html, $pos, 'tr');
@@ -78,7 +111,7 @@ function contentnotes_strip_hidden(string $html): string
 
     // Posts
     $guard = 0;
-    while ($guard++ < 500 && preg_match('/<!--contentnotes-hide-post:(\d+)-->/', $html, $m, PREG_OFFSET_CAPTURE)) {
+    while ($guard++ < 500 && preg_match('/<!--contentnotes-hide-post:(\d+):' . preg_quote(contentnotes_hide_token(), '/') . '-->/', $html, $m, PREG_OFFSET_CAPTURE)) {
         $pos = $m[0][1];
         $len = strlen($m[0][0]);
         $pid = (int)$m[1][0];
@@ -255,7 +288,7 @@ function contentnotes_handle_thread_badge(): void
 
     // „Komplett ausblenden“: Zeile später aus der fertigen Seite entfernen (Marker in der Zeile)
     if (contentnotes_viewer_hides(array_column($described, 'cid'))) {
-        $thread['contentnotes_badge'] = '<!--contentnotes-hide-thread:' . $tid . '-->';
+        $thread['contentnotes_badge'] = contentnotes_marker('thread', $tid);
 
         return;
     }
@@ -357,7 +390,7 @@ function contentnotes_veil_post(array &$post, array $cid_to_note, bool $allow_hi
     if ($action === 'hide' && $allow_hide) {
         // Die Nachricht wird nie ausgeliefert. Der Marker lässt den ganzen Post entfernen; klappt das
         // nicht (unausgeglichenes HTML), bleibt nur diese Hinweiszeile stehen.
-        $post['message'] = '<!--contentnotes-hide-post:' . (int)($post['pid'] ?? 0) . '-->'
+        $post['message'] = contentnotes_marker('post', (int)($post['pid'] ?? 0))
             . '<div class="contentnotes_hidden_note smalltext">' . htmlspecialchars_uni((string)$lang->contentnotes_post_hidden_fallback) . '</div>';
 
         return;

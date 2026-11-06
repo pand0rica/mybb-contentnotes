@@ -2,9 +2,7 @@
 // Content Notes – Admin-Sprachdatei (Deutsch, du-Form)
 
 $l['contentnotes'] = "Inhaltswarnungen";
-$l['contentnotes_description'] = "Verwaltung der Kategorien für Inhaltswarnungen.";
 $l['contentnotes_can_manage'] = "Darf Kategorien für Inhaltswarnungen verwalten?";
-$l['contentnotes_invalid_key'] = "Der Sicherheitsschlüssel war ungültig oder fehlte. Bitte versuche es noch einmal.";
 
 // Tabs
 $l['contentnotes_tab_list'] = "Kategorien";
@@ -43,6 +41,8 @@ $l['contentnotes_success_activated'] = "Die Kategorie wurde aktiviert.";
 $l['contentnotes_success_deactivated'] = "Die Kategorie wurde deaktiviert.";
 $l['contentnotes_success_deleted'] = "Die Kategorie samt allen Markierungen und Einstellungen von Mitgliedern wurde gelöscht.";
 $l['contentnotes_success_order'] = "Die Sortierung wurde gespeichert.";
+$l['contentnotes_confirm_activate'] = "Möchtest du die Kategorie \"{1}\" wirklich aktivieren? Sie lässt sich danach beim Schreiben wieder auswählen.";
+$l['contentnotes_confirm_deactivate'] = "Möchtest du die Kategorie \"{1}\" wirklich deaktivieren? Sie lässt sich beim Schreiben nicht mehr auswählen, bestehende Markierungen wirken weiter.";
 $l['contentnotes_confirm_delete'] = "Möchtest du die Kategorie \"{1}\" wirklich löschen? Alle Markierungen an Threads und Beiträgen und alle Einstellungen von Mitgliedern zu dieser Kategorie werden ebenfalls gelöscht.";
 
 // Übersichtstabelle

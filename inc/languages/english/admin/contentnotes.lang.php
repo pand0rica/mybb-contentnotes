@@ -2,9 +2,7 @@
 // Content Notes – admin language file (English)
 
 $l['contentnotes'] = "Content Notes";
-$l['contentnotes_description'] = "Manage the categories for content notes.";
 $l['contentnotes_can_manage'] = "Can manage content note categories?";
-$l['contentnotes_invalid_key'] = "The security token was invalid or missing. Please try again.";
 
 // Tabs
 $l['contentnotes_tab_list'] = "Categories";
@@ -43,6 +41,8 @@ $l['contentnotes_success_activated'] = "The category has been activated.";
 $l['contentnotes_success_deactivated'] = "The category has been deactivated.";
 $l['contentnotes_success_deleted'] = "The category and all its markings and member settings have been deleted.";
 $l['contentnotes_success_order'] = "The display order has been saved.";
+$l['contentnotes_confirm_activate'] = "Do you really want to activate the category \"{1}\"? It can then be chosen again when writing.";
+$l['contentnotes_confirm_deactivate'] = "Do you really want to deactivate the category \"{1}\"? It can no longer be chosen when writing; existing markings keep working.";
 $l['contentnotes_confirm_delete'] = "Do you really want to delete the category \"{1}\"? All markings on threads and posts and all member settings for this category will be deleted as well.";
 
 // Overview table
