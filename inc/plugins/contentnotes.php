@@ -12,7 +12,7 @@ if (!defined('IN_MYBB')) {
     die('Direct initialization of this file is not allowed.');
 }
 
-define('CONTENTNOTES_VERSION', '1.0.0');
+define('CONTENTNOTES_VERSION', '1.1.0');
 define('CONTENTNOTES_DIR', MYBB_ROOT . 'inc/plugins/contentnotes/');
 
 // Die Module enthalten ausschließlich Funktionsdefinitionen (keine Seiteneffekte) und werden
@@ -118,6 +118,7 @@ function contentnotes_install(): void
         `slug`        VARCHAR(50) COLLATE utf8_unicode_ci NOT NULL DEFAULT '',
         `description` TEXT COLLATE utf8_unicode_ci,
         `active`      TINYINT(1) NOT NULL DEFAULT 1,
+        `require_note` TINYINT(1) NOT NULL DEFAULT 0,
         `disporder`   INT(11) NOT NULL DEFAULT 0,
         PRIMARY KEY (`cid`),
         UNIQUE KEY `slug` (`slug`)
@@ -380,13 +381,30 @@ function contentnotes_install_stylesheet(): void
 }
 
 /**
- * Aktiviert das Plugin: Settings nachrüsten, Templates, Stylesheet, Core-Template-Injektionen.
+ * Upgrade-Schritte für das Schema (idempotent, läuft bei jeder Aktivierung).
+ *
+ * @return void
+ */
+function contentnotes_upgrade_schema(): void
+{
+    global $db;
+
+    // 1.1.0: Freitext pro Kategorie als Pflicht
+    if ($db->table_exists('contentnotes_categories') && !$db->field_exists('require_note', 'contentnotes_categories')) {
+        $db->add_column('contentnotes_categories', 'require_note', 'TINYINT(1) NOT NULL DEFAULT 0');
+        contentnotes_db_rebuild_cache();
+    }
+}
+
+/**
+ * Aktiviert das Plugin: Upgrade-Schritte, Settings, Templates, Stylesheet und Template-Einbindungen.
  *
  * @return void
  */
 function contentnotes_activate(): void
 {
-    // Upgrade-Pfad: neue Settings späterer Versionen nachrüsten, vorhandene Werte bleiben.
+    // Upgrade-Pfad: neue Spalten/Settings späterer Versionen nachrüsten, vorhandene Werte bleiben.
+    contentnotes_upgrade_schema();
     contentnotes_install_settings();
     rebuild_settings();
 

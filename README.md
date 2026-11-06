@@ -33,6 +33,7 @@ ACP → Configuration → **Content Notes**.
 | Short code | Unique code used in the MyCode, e.g. `violence` (lowercase letters, digits, `-`, `_`; max. 50 characters) |
 | Description | Optional, shown next to the category in the User CP |
 | Active | Inactive categories can no longer be chosen when writing; existing markings keep working |
+| Free text required | If enabled, a hint is mandatory whenever this category is chosen (form and `[cw=code]` passages); posts without it are rejected |
 | Display order | Categories are sorted by this number |
 
 ![Add category](docs/screenshots/acp-category-add.png)
@@ -40,6 +41,9 @@ ACP → Configuration → **Content Notes**.
 Activating, deactivating and deleting ask for confirmation. **Deleting a category also deletes all markings with this category
 and the members' settings for it.** Changing a short code means existing `[cw=old-code]` markings in posts show a generic
 content note instead of the category.
+
+A set of 14 default categories can be created with `php inc/plugins/contentnotes/seed-categories.php` (run from the MyBB root;
+existing categories are never overwritten).
 
 ![Delete confirmation](docs/screenshots/acp-category-delete-confirm.png)
 

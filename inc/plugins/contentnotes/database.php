@@ -70,6 +70,7 @@ function contentnotes_db_rebuild_cache(): array
             'slug'        => (string)$row['slug'],
             'description' => (string)($row['description'] ?? ''),
             'active'      => (int)$row['active'],
+            'require_note' => (int)($row['require_note'] ?? 0),
             'disporder'   => (int)$row['disporder'],
         ];
     }
@@ -165,7 +166,7 @@ function contentnotes_db_slug_exists(string $slug, int $exclude_cid = 0): bool
 /**
  * Legt eine Kategorie an und baut den Cache neu auf.
  *
- * @param array $data name, slug, description, active, disporder
+ * @param array $data name, slug, description, active, require_note, disporder
  * @return int Neue Kategorie-ID
  */
 function contentnotes_db_insert_category(array $data): int
@@ -177,6 +178,7 @@ function contentnotes_db_insert_category(array $data): int
         'slug'        => $db->escape_string((string)($data['slug'] ?? '')),
         'description' => $db->escape_string((string)($data['description'] ?? '')),
         'active'      => empty($data['active']) ? 0 : 1,
+        'require_note' => empty($data['require_note']) ? 0 : 1,
         'disporder'   => (int)($data['disporder'] ?? 0),
     ]);
 
@@ -208,6 +210,9 @@ function contentnotes_db_update_category(int $cid, array $data): void
     }
     if (array_key_exists('active', $data)) {
         $update['active'] = empty($data['active']) ? 0 : 1;
+    }
+    if (array_key_exists('require_note', $data)) {
+        $update['require_note'] = empty($data['require_note']) ? 0 : 1;
     }
     if (array_key_exists('disporder', $data)) {
         $update['disporder'] = (int)$data['disporder'];

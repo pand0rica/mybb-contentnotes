@@ -3,6 +3,18 @@
 All notable changes to this project are documented in this file. The format is based on
 [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.1.0] - 2026-11-06
+
+### New
+- Per category option **"Free text required"** (ACP). If enabled, a hint is mandatory whenever the category is chosen: in the
+  form (new thread, reply, quick reply, edit post) and for `[cw=short-code]…[/cw]` passages. Posts without the text are rejected
+  with an error message; the editor dialog marks such categories and asks for the hint.
+- `inc/plugins/contentnotes/seed-categories.php`: idempotent CLI script that creates a set of 14 default categories (never
+  overwrites existing ones).
+
+### Changed
+- Upgrade path: activating the plugin adds the new column `require_note` to existing installations; data is kept.
+
 ## [1.0.0] - 2026-11-06
 
 ### New

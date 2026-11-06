@@ -565,6 +565,24 @@ check_true('Ausgabe-Hook entfernt Marker auch ohne Script-Einbindung', strpos(co
 contentnotes_db_delete_user_prefs([795]);
 as_user(0, '1');
 
+// ---------------------------------------------------------------------------------------
+echo "Pflicht-Freitext (require_note)\n";
+// ---------------------------------------------------------------------------------------
+$misc = contentnotes_db_insert_category(['name' => 'Sonstiges', 'slug' => 'sonstiges', 'description' => '', 'active' => 1, 'require_note' => 1, 'disporder' => 9]);
+check('require_note im Cache', 1, contentnotes_db_get_category($misc)['require_note'] ?? null);
+check('require_note default 0', 0, contentnotes_db_get_category($violence)['require_note'] ?? null);
+check('Formular: Pflichtkategorie ohne Text fehlt', ['Sonstiges'], contentnotes_missing_required_notes([$misc => ''], ''));
+check('Formular: nur Leerzeichen zählt als leer', ['Sonstiges'], contentnotes_missing_required_notes([$misc => '   '], ''));
+check('Formular: Pflichtkategorie mit Text ok', [], contentnotes_missing_required_notes([$misc => 'Details'], ''));
+check('Formular: normale Kategorie ohne Text ok', [], contentnotes_missing_required_notes([$violence => ''], ''));
+check('Inline: [cw=sonstiges] ohne Hinweis fehlt', ['Sonstiges'], contentnotes_missing_required_notes([], 'Text [cw=sonstiges]etwas[/cw]'));
+check('Inline: [cw=sonstiges|Hinweis] ok', [], contentnotes_missing_required_notes([], 'Text [cw=sonstiges|Hinweis]etwas[/cw]'));
+check('Inline: Anführungszeichen-Form ohne Hinweis fehlt', ['Sonstiges'], contentnotes_missing_required_notes([], 'x [cw="sonstiges"]y[/cw]'));
+check('Inline: normale Kategorie ohne Hinweis ok', [], contentnotes_missing_required_notes([], 'x [cw=gewalt]y[/cw]'));
+check('Formular + Inline: kein Duplikat', ['Sonstiges'], contentnotes_missing_required_notes([$misc => ''], 'x [cw=sonstiges]y[/cw]'));
+contentnotes_db_update_category($misc, ['require_note' => 0]);
+check('update_category require_note aus', 0, contentnotes_db_get_category($misc)['require_note'] ?? null);
+
 // Aufräumen: Fixtures entfernen
 $db->delete_query('contentnotes_notes');
 $db->delete_query('contentnotes_userprefs');

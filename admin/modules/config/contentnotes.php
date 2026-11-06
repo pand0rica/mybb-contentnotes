@@ -61,6 +61,7 @@ function contentnotes_acp_read_form(): array
         'slug'        => strtolower(trim($mybb->get_input('slug'))),
         'description' => trim($mybb->get_input('description')),
         'active'      => $mybb->get_input('active', MyBB::INPUT_INT) === 1 ? 1 : 0,
+        'require_note' => $mybb->get_input('require_note', MyBB::INPUT_INT) === 1 ? 1 : 0,
         'disporder'   => $mybb->get_input('disporder', MyBB::INPUT_INT),
     ];
 }
@@ -134,6 +135,12 @@ function contentnotes_acp_output_form(string $action_url, array $data, string $t
         'active'
     );
     $form_container->output_row(
+        $lang->contentnotes_field_require_note,
+        $lang->contentnotes_field_require_note_desc,
+        $form->generate_yes_no_radio('require_note', (int)($data['require_note'] ?? 0)),
+        'require_note'
+    );
+    $form_container->output_row(
         $lang->contentnotes_field_disporder,
         $lang->contentnotes_field_disporder_desc,
         $form->generate_numeric_field('disporder', (int)$data['disporder'], ['id' => 'disporder', 'min' => 0]),
@@ -157,7 +164,7 @@ $list_url = 'index.php?module=config-contentnotes';
 // ---------------------------------------------------------------------------------------
 if ($action === 'add') {
     $errors = [];
-    $data   = ['name' => '', 'slug' => '', 'description' => '', 'active' => 1, 'disporder' => 0];
+    $data   = ['name' => '', 'slug' => '', 'description' => '', 'active' => 1, 'require_note' => 0, 'disporder' => 0];
 
     // Schreibt nur unter POST: admin/index.php prüft den my_post_key selbst und stuft bei Fehler auf GET herunter
     if ($mybb->request_method === 'post') {

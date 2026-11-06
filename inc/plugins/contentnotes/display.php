@@ -192,7 +192,11 @@ function contentnotes_handle_output($contents)
     if (!empty($mybb->settings['contentnotes_editor_button']) && contentnotes_user_in_allowed_group()) {
         $categories = [];
         foreach (contentnotes_db_get_categories(true) as $category) {
-            $categories[] = ['slug' => $category['slug'], 'name' => $category['name']];
+            $categories[] = [
+                'slug'        => $category['slug'],
+                'name'        => $category['name'],
+                'requireNote' => !empty($category['require_note']),
+            ];
         }
 
         $data = [
@@ -204,6 +208,7 @@ function contentnotes_handle_output($contents)
                 'note'     => (string)$lang->contentnotes_editor_note,
                 'insert'   => (string)$lang->contentnotes_editor_insert,
                 'none'     => (string)$lang->contentnotes_editor_none,
+                'required' => (string)$lang->contentnotes_editor_note_required,
             ],
         ];
 

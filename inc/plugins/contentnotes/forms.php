@@ -177,6 +177,9 @@ function contentnotes_build_form(array $selected, bool $quick = false): string
         $name      = htmlspecialchars_uni($category['name']);
         $checked   = isset($selected[$cid]) ? ' checked="checked"' : '';
         $note      = htmlspecialchars_uni(isset($selected[$cid]) ? (string)$selected[$cid] : '');
+        $placeholder = !empty($category['require_note'])
+            ? $lang->contentnotes_note_placeholder_required
+            : $lang->contentnotes_note_placeholder;
         eval('$rows .= "' . $templates->get('contentnotes_form_row') . '";');
     }
 
@@ -293,14 +296,57 @@ function contentnotes_handle_validate(&$handler): void
     }
     $done[$key] = true;
 
-    if (!contentnotes_form_submitted()) {
-        return;
-    }
-
-    if (contentnotes_note_too_long(contentnotes_read_input())) {
+    // Ohne abgeschicktes Formular zählt nur die [cw]-Prüfung der Nachricht
+    $input = contentnotes_form_submitted() ? contentnotes_read_input() : [];
+    if (contentnotes_note_too_long($input)) {
         contentnotes_load_lang();
         $handler->set_error('contentnotes_note_too_long');
     }
+
+    // Kategorien mit Pflicht-Freitext: Formular (Thread/Beitrag) und [cw]-Passagen prüfen
+    $missing = contentnotes_missing_required_notes($input, (string)($handler->data['message'] ?? ''));
+    if ($missing) {
+        contentnotes_load_lang();
+        foreach ($missing as $name) {
+            $handler->set_error('contentnotes_note_required', [$name]);
+        }
+    }
+}
+
+/**
+ * Welche Kategorien mit Pflicht-Freitext haben keinen Text?
+ *
+ * Geprüft werden angehakte Kategorien des Formulars (nur aktive oder gesetzte; unbekannte werden
+ * ohnehin verworfen) und [cw=kuerzel]…[/cw]-Passagen in der Nachricht.
+ *
+ * @param array  $cid_to_note Formulareingabe (cid => Freitext)
+ * @param string $message     Nachrichtentext (Rohtext)
+ * @return array Namen der betroffenen Kategorien (ohne Duplikate)
+ */
+function contentnotes_missing_required_notes(array $cid_to_note, string $message): array
+{
+    $categories = contentnotes_db_get_categories();
+    $missing    = [];
+
+    foreach ($cid_to_note as $cid => $note) {
+        $cid = (int)$cid;
+        if (isset($categories[$cid]) && !empty($categories[$cid]['require_note']) && trim((string)$note) === '') {
+            $missing[$cid] = $categories[$cid]['name'];
+        }
+    }
+
+    if ($message !== '' && stripos($message, '[cw') !== false) {
+        preg_match_all(contentnotes_inline_pattern(), $message, $matches, PREG_SET_ORDER);
+        foreach ($matches as $m) {
+            list($slug, $raw_note) = contentnotes_split_attr((string)($m[1] ?? ''));
+            $category = $slug !== '' ? contentnotes_db_get_category_by_slug($slug) : null;
+            if ($category !== null && !empty($category['require_note']) && trim(strip_tags($raw_note)) === '') {
+                $missing[(int)$category['cid']] = $category['name'];
+            }
+        }
+    }
+
+    return array_values($missing);
 }
 
 /**

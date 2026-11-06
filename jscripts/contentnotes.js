@@ -158,7 +158,8 @@
 
 				var $select = $('<select id="contentnotes_editor_category"></select>');
 				$.each(categories, function (index, category) {
-					$select.append($('<option></option>').val(category.slug).text(category.name));
+					$select.append($('<option></option>').val(category.slug)
+						.text(category.name + (category.requireNote ? ' (' + (lang.required || 'required') + ')' : '')));
 				});
 
 				var $note = $('<input type="text" id="contentnotes_editor_note" class="textbox" maxlength="255" />');
@@ -175,6 +176,18 @@
 
 				$button.on('click', function (event) {
 					var note = $.trim($note.val()).replace(/[\]\r\n]+/g, ' ');
+					var chosen = null;
+
+					$.each(categories, function (index, category) {
+						if (category.slug === $select.val()) {
+							chosen = category;
+						}
+					});
+					if (chosen && chosen.requireNote && !note) {
+						$note.focus();
+						event.preventDefault();
+						return;
+					}
 
 					editor.insert('[cw=' + $select.val() + (note ? '|' + note : '') + ']', '[/cw]');
 					editor.closeDropDown(true);
