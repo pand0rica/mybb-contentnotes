@@ -122,3 +122,10 @@ member settings), settings, templates and stylesheets. Deactivating alone keeps 
 
 ## Changelog
 See [CHANGELOG.md](CHANGELOG.md).
+
+## Branch `h4w` (H4W theme)
+
+The `h4w` branch differs from `main` only in `inc/plugins/contentnotes/templates/contentnotes_form.tpl` (and a small CSS block at
+the end of `contentnotes.css`): the H4W theme builds the write forms as a flex container (`.h4w-post-container` with
+`.h4w-post-item` divs, label/field alternating) instead of a table, so the form is two `<div>`s instead of a `<tr>`.
+Merge `main` into `h4w` (never the other way round); on a conflict in `contentnotes_form.tpl` keep the `h4w` version.

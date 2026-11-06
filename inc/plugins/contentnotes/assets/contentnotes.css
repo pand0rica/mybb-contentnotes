@@ -104,3 +104,18 @@
 	padding: 6px 0;
 	font-style: italic;
 }
+
+/* h4w-Theme: das Formular ist ein Flex-Item (.h4w-post-item), Felder passen sich der Spalte an */
+.h4w-post-item .contentnotes_form_row {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 4px 8px;
+}
+
+.h4w-post-item .contentnotes_note_input {
+	flex: 1 1 200px;
+	margin-left: 0;
+	min-width: 0;
+	box-sizing: border-box;
+}
