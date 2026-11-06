@@ -100,7 +100,7 @@
 		var config = window.contentnotes_config;
 
 		// Nur für berechtigte Gruppen; Konfiguration liefert der Header (contentnotes_config)
-		if (!config || !config.canSet || typeof window.opt_editor === 'undefined' || !$.sceditor) {
+		if (!config || !config.canSet || !$.sceditor) {
 			return;
 		}
 
@@ -205,15 +205,88 @@
 			tooltip: lang.button || 'Content note'
 		});
 
-		// Button in die Toolbar legen (hinter „quote“), ohne das Core-Template zu ändern
-		var toolbar = String(window.opt_editor.toolbar || '');
-		if (toolbar.indexOf('contentnotes') === -1) {
-			if (toolbar.indexOf('quote|') !== -1) {
-				toolbar = toolbar.replace('quote|', 'quote,contentnotes|');
-			} else {
-				toolbar += '|contentnotes';
+		// Weg 1: Button über die Toolbar-Konfiguration des Core-Editors (hinter „quote“), ohne das Core-Template zu ändern
+		if (window.opt_editor) {
+			var toolbar = String(window.opt_editor.toolbar || '');
+			if (toolbar.indexOf('contentnotes') === -1) {
+				if (toolbar.indexOf('quote|') !== -1) {
+					toolbar = toolbar.replace('quote|', 'quote,contentnotes|');
+				} else {
+					toolbar += '|contentnotes';
+				}
+				window.opt_editor.toolbar = toolbar;
 			}
-			window.opt_editor.toolbar = toolbar;
 		}
+
+		// Weg 2 (Fallback): Themes mit eigener Editor-Initialisierung ignorieren opt_editor.toolbar.
+		// Dann den Button nach dem Start des Editors direkt in dessen Toolbar setzen.
+		function addButtonTo(textarea) {
+			var instance;
+			try {
+				instance = $(textarea).sceditor('instance');
+			} catch (e) {
+				instance = null;
+			}
+			if (!instance) {
+				return false;
+			}
+
+			// SCEditor setzt den Container als Geschwister (vor bzw. nach dem Textarea)
+			var $container = $(textarea).siblings('.sceditor-container').first();
+			if (!$container.length) {
+				$container = $(textarea).parent().find('.sceditor-container').first();
+			}
+			var $toolbar = $container.find('.sceditor-toolbar').first();
+			if (!$toolbar.length) {
+				return false;
+			}
+			if ($toolbar.find('.sceditor-button-contentnotes').length) {
+				return true;
+			}
+
+			var $group = $toolbar.find('.sceditor-group').last();
+			if (!$group.length) {
+				$group = $('<div class="sceditor-group"></div>').appendTo($toolbar);
+			}
+			var $button = $('<a class="sceditor-button sceditor-button-contentnotes" unselectable="on"></a>')
+				.attr('title', lang.button || 'Content note')
+				.append($('<div unselectable="on"></div>').text(lang.button || 'Content note'));
+
+			$button.on('click', function (event) {
+				event.preventDefault();
+				$.sceditor.command.get('contentnotes')._dropDown(instance, $button.get(0));
+			});
+			$group.append($button);
+
+			return true;
+		}
+
+		function ensureButtons() {
+			var all = true;
+			$('textarea').each(function () {
+				if (!this.name || (this.name !== 'message' && this.id !== 'message')) {
+					return;
+				}
+				if (!addButtonTo(this)) {
+					all = false;
+				}
+			});
+			return all;
+		}
+
+		// Editor starten asynchron/später: bis zu ~10 s alle 250 ms nachsehen, dann aufhören
+		var tries = 0;
+		var timer = window.setInterval(function () {
+			tries++;
+			var found = $('textarea[name="message"]').filter(function () {
+				return $(this).siblings('.sceditor-container').length > 0;
+			}).length > 0;
+			if (found) {
+				ensureButtons();
+			}
+			if (tries >= 40) {
+				window.clearInterval(timer);
+			}
+		}, 250);
 	});
 }());
