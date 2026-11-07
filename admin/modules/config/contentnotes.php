@@ -331,13 +331,13 @@ $table->construct_header($lang->contentnotes_col_description);
 $table->construct_header($lang->contentnotes_col_status, ['class' => 'align_center']);
 $table->construct_header($lang->contentnotes_col_order, ['class' => 'align_center', 'width' => '8%']);
 $table->construct_header($lang->contentnotes_col_uses, ['class' => 'align_center']);
-$table->construct_header($lang->contentnotes_col_controls, ['class' => 'align_center', 'colspan' => 3]);
+$table->construct_header($lang->contentnotes_col_controls, ['class' => 'align_center']);
 
 $categories = contentnotes_db_get_categories();
 $counts     = contentnotes_db_count_notes_per_category();
 
 if (!$categories) {
-    $table->construct_cell($lang->contentnotes_none, ['colspan' => 9, 'class' => 'align_center']);
+    $table->construct_cell($lang->contentnotes_none, ['colspan' => 7, 'class' => 'align_center']);
     $table->construct_row();
 }
 
@@ -353,19 +353,15 @@ foreach ($categories as $category_id => $category) {
         ['class' => 'align_center']
     );
     $table->construct_cell((int)($counts[$category_id] ?? 0), ['class' => 'align_center']);
-    $table->construct_cell(
-        '<a href="' . $list_url . '&amp;action=edit&amp;cid=' . (int)$category_id . '">' . $lang->contentnotes_edit . '</a>',
-        ['class' => 'align_center']
+    // Natives ACP-Optionsmenü: Klick auf den Button, dann Bearbeiten / (De-)aktivieren / Löschen
+    $popup = new PopupMenu('contentnotes_' . (int)$category_id, $lang->options);
+    $popup->add_item($lang->contentnotes_edit, $list_url . '&amp;action=edit&amp;cid=' . (int)$category_id);
+    $popup->add_item(
+        $active ? $lang->contentnotes_deactivate : $lang->contentnotes_activate,
+        $list_url . '&amp;action=toggle&amp;cid=' . (int)$category_id
     );
-    $table->construct_cell(
-        '<a href="' . $list_url . '&amp;action=toggle&amp;cid=' . (int)$category_id . '">'
-        . ($active ? $lang->contentnotes_deactivate : $lang->contentnotes_activate) . '</a>',
-        ['class' => 'align_center']
-    );
-    $table->construct_cell(
-        '<a href="' . $list_url . '&amp;action=delete&amp;cid=' . (int)$category_id . '">' . $lang->contentnotes_delete . '</a>',
-        ['class' => 'align_center']
-    );
+    $popup->add_item($lang->contentnotes_delete, $list_url . '&amp;action=delete&amp;cid=' . (int)$category_id);
+    $table->construct_cell($popup->fetch(), ['class' => 'align_center']);
     $table->construct_row();
 }
 
