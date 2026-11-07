@@ -1,14 +1,19 @@
 /* Content Notes */
 
 /* Badge in Forenansicht / Suche */
+/* Label in der Threadliste: eigene Zeile vor dem Titel */
+.contentnotes_badge_row {
+	margin-bottom: 2px;
+}
+
 .contentnotes_badge {
 	display: inline-block;
-	margin-left: 6px;
+	max-width: 100%;
 	padding: 0 6px;
 	border: 1px solid rgba(160, 120, 0, 0.6);
 	border-radius: 3px;
 	background: rgba(255, 193, 7, 0.18);
-	white-space: nowrap;
+	box-sizing: border-box;
 	vertical-align: middle;
 }
 
