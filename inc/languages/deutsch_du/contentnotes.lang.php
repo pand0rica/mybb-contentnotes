@@ -12,6 +12,7 @@ $l['contentnotes_form_summary'] = "Inhaltswarnungen hinzufügen";
 $l['contentnotes_note_placeholder'] = "Optionale Details (max. 255 Zeichen)";
 $l['contentnotes_note_placeholder_required'] = "Pflichtfeld: Was genau kommt vor? (max. 255 Zeichen)";
 $l['postdata_contentnotes_note_required'] = "Bei der Inhaltswarnung „{1}“ ist ein Freitext Pflicht.";
+$l['contentnotes_editor_note_label_required'] = "Details (Pflicht)";
 $l['contentnotes_editor_note_required'] = "Pflicht";
 $l['postdata_contentnotes_note_too_long'] = "Der Text einer Inhaltswarnung ist länger als 255 Zeichen.";
 

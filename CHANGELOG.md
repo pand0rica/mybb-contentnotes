@@ -17,6 +17,7 @@ All notable changes to this project are documented in this file. The format is b
 - Thread list and search results: the content note label now sits **in its own line before the thread title** instead of behind it, so
   titles and page links no longer shift. The old template injection is removed automatically on re-activation.
 - ACP category list: edit/(de)activate/delete in the native options popup menu.
+- Editor dialog: the hint field is labelled "Details (required)" when a category with required free text is selected.
 
 ## [1.0.0] - 2026-11-06
 

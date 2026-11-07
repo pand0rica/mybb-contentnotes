@@ -209,6 +209,7 @@ function contentnotes_handle_output($contents)
                 'insert'   => (string)$lang->contentnotes_editor_insert,
                 'none'     => (string)$lang->contentnotes_editor_none,
                 'required' => (string)$lang->contentnotes_editor_note_required,
+                'noteRequired' => (string)$lang->contentnotes_editor_note_label_required,
             ],
         ];
 

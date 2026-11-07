@@ -163,6 +163,20 @@
 				});
 
 				var $note = $('<input type="text" id="contentnotes_editor_note" class="textbox" maxlength="255" />');
+				var $noteLabel = $('<label for="contentnotes_editor_note"></label>');
+
+				// Beschriftung des Hinweisfelds: bei Kategorien mit Pflicht-Freitext „Details (Pflicht)“
+				function updateNoteLabel() {
+					var required = false;
+					$.each(categories, function (index, category) {
+						if (category.slug === $select.val() && category.requireNote) {
+							required = true;
+						}
+					});
+					$noteLabel.text((required ? (lang.noteRequired || 'Details (required)') : (lang.note || 'Note')) + ': ');
+				}
+				$select.on('change', updateNoteLabel);
+				updateNoteLabel();
 				var $button = $('<input type="button" class="button" />').val(lang.insert || 'Insert');
 
 				$content
@@ -170,7 +184,7 @@
 						.append($('<label for="contentnotes_editor_category"></label>').text((lang.category || 'Category') + ': '))
 						.append($select))
 					.append($('<div></div>')
-						.append($('<label for="contentnotes_editor_note"></label>').text((lang.note || 'Note') + ': '))
+						.append($noteLabel)
 						.append($note))
 					.append($('<div></div>').append($button));
 
