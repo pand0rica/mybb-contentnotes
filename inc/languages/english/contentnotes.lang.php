@@ -12,6 +12,7 @@ $l['contentnotes_form_summary'] = "Add content notes";
 $l['contentnotes_note_placeholder'] = "Optional details (max. 255 characters)";
 $l['contentnotes_note_placeholder_required'] = "Required: what exactly happens? (max. 255 characters)";
 $l['postdata_contentnotes_note_required'] = "The content note “{1}” requires a free text.";
+$l['contentnotes_editor_note_label_required'] = "Details (required)";
 $l['contentnotes_editor_note_required'] = "Required";
 $l['postdata_contentnotes_note_too_long'] = "The text of a content note is longer than 255 characters.";
 
