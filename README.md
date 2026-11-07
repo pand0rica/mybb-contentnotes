@@ -129,5 +129,7 @@ The `h4w` branch differs from `main` only in `inc/plugins/contentnotes/templates
 the end of `contentnotes.css`): the H4W theme builds the write forms as a flex container (`.h4w-post-container` with
 `.h4w-post-item` divs, label/field alternating) instead of a table, so the form is two `<div>`s instead of a `<tr>`.
 Merge `main` into `h4w` (never the other way round); on a conflict in `contentnotes_form.tpl` keep the `h4w` version.
-The editor button files (`jscripts/contentnotes.js` and the `.sceditor-button-contentnotes` rule in `contentnotes.css`) are deliberately kept at
-the state of commit `a2c09ae` on `h4w`; later editor changes on `main` are not taken over here (keep the `h4w` version on conflicts).
+Editor changes (`jscripts/contentnotes.js`, the `.sceditor-button-contentnotes` rule in `contentnotes.css`) are kept in sync between `main` and
+`h4w` unless the owner says otherwise: a change made on `main` is merged into `h4w`, and a change made on `h4w` is applied to `main` as well.
+Currently `h4w` still has the editor files at the state of commit `a2c09ae`, i.e. without the later editor button commits `39c410f`, `4ec9efa`
+and `b971a77` from `main`, because those were reverted on `h4w` on request; they are not taken over until the owner asks for it.
