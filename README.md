@@ -131,5 +131,4 @@ the end of `contentnotes.css`): the H4W theme builds the write forms as a flex c
 Merge `main` into `h4w` (never the other way round); on a conflict in `contentnotes_form.tpl` keep the `h4w` version.
 Editor changes (`jscripts/contentnotes.js`, the `.sceditor-button-contentnotes` rule in `contentnotes.css`) are kept in sync between `main` and
 `h4w` unless the owner says otherwise: a change made on `main` is merged into `h4w`, and a change made on `h4w` is applied to `main` as well.
-Currently `h4w` still has the editor files at the state of commit `a2c09ae`, i.e. without the later editor button commits `39c410f`, `4ec9efa`
-and `b971a77` from `main`, because those were reverted on `h4w` on request; they are not taken over until the owner asks for it.
+`h4w` and `main` currently have the same editor files.

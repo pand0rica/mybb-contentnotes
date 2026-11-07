@@ -85,18 +85,10 @@
 	margin-left: 8px;
 }
 
-/* Editor-Button: Warnsymbol statt Sprite (die Theme-Regel setzt die Schriftfarbe auf transparent) */
+/* Editor-Button: eigenes, farbiges SVG-Symbol statt Sprite oder Textfarbe – bleibt auf hellen und dunklen
+   Toolbars sichtbar (die Theme-Regel setzt die Schriftfarbe der Buttons auf transparent). */
 .sceditor-button-contentnotes div {
-	background-image: none !important;
-}
-
-.sceditor-button-contentnotes div:before {
-	content: "\26A0";
-	display: block;
-	color: #444 !important;
-	font-size: 14px;
-	line-height: 16px;
-	text-align: center;
+	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M8 1.5 15 14H1z' fill='%23f0a81c' stroke='%23704800' stroke-linejoin='round'/%3E%3Cpath d='M8 6v4' stroke='%23311' stroke-width='1.6' stroke-linecap='round'/%3E%3Ccircle cx='8' cy='11.9' r='.9' fill='%23311'/%3E%3C/svg%3E") center / 16px 16px no-repeat !important;
 }
 
 /* Fallback-Zeile, falls ein komplett ausgeblendeter Post nicht entfernt werden konnte */
