@@ -3,7 +3,7 @@
 ## Identität
 - **Name:** Content Notes
 - **Codename / Dateiname:** `contentnotes` (Präfix: `contentnotes`)
-- **Version:** 1.0.0
+- **Version:** 1.1.0
 - **Entwickelt von:** pand0rica
 - **Kurzbeschreibung:** Inhaltswarnungen (Content Notes) für ganze Threads, einzelne Posts und
   einzelne Textstellen – mit frei definierbaren Kategorien und persönlicher Einstellung pro
@@ -21,7 +21,10 @@ anklickbare Warnung sehen oder den Inhalt direkt ohne Warnung angezeigt bekommen
 
 ### Kategorien (ACP)
 - Felder: **Name**, **Kürzel** (eindeutig, nur `[a-z0-9_-]`, max. 50 Zeichen – steht im MyCode),
-  **Beschreibung** (erscheint im UserCP), **aktiv/inaktiv**, **Sortierung** (`disporder`).
+  **Beschreibung** (erscheint im UserCP), **aktiv/inaktiv**, **Freitext Pflicht** (`require_note`: beim Wählen der Kategorie
+  muss ein Hinweistext angegeben werden, im Formular und bei `[cw=kürzel]`-Passagen), **Sortierung** (`disporder`).
+  Die ACP-Liste nutzt das native Optionsmenü (`PopupMenu`) für Bearbeiten/(De-)aktivieren/Löschen.
+  `inc/plugins/contentnotes/seed-categories.php` legt (idempotent, per CLI) einen Satz Standardkategorien an.
 - Inaktive Kategorien sind in Formularen und im Editor nicht mehr wählbar, bestehende
   Markierungen damit wirken aber weiter (Anzeige + UserCP-Einstellung bleiben).
 - Löschen einer Kategorie entfernt alle Markierungen (`contentnotes_notes`) und Vorlieben
@@ -107,7 +110,7 @@ Alle `ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci` (Kit `conventi
 
 | Tabelle (`TABLE_PREFIX .`) | Zweck | Spalten |
 |---|---|---|
-| `contentnotes_categories` | Kategorien | `cid` INT(11) AI PK, `name` VARCHAR(100) NOT NULL, `slug` VARCHAR(50) NOT NULL UNIQUE, `description` TEXT, `active` TINYINT(1) DEFAULT 1, `disporder` INT(11) DEFAULT 0 |
+| `contentnotes_categories` | Kategorien | `cid` INT(11) AI PK, `name` VARCHAR(100) NOT NULL, `slug` VARCHAR(50) NOT NULL UNIQUE, `description` TEXT, `active` TINYINT(1) DEFAULT 1, `require_note` TINYINT(1) DEFAULT 0, `disporder` INT(11) DEFAULT 0 |
 | `contentnotes_notes` | Markierungen an Threads/Posts | `nid` INT(11) AI PK, `type` VARCHAR(10) NOT NULL (`thread` \| `post`), `refid` INT(11) NOT NULL (tid bzw. pid), `cid` INT(11) NOT NULL, `note` VARCHAR(255) NOT NULL DEFAULT ''; UNIQUE KEY (`type`,`refid`,`cid`), KEY (`type`,`refid`) |
 | `contentnotes_userprefs` | Vorlieben pro Mitglied & Kategorie | `uid` INT(11) NOT NULL, `cid` INT(11) NOT NULL, `mode` TINYINT(1) NOT NULL DEFAULT 0 (0 = Warnung, 1 = einblenden, 2 = komplett ausblenden); PRIMARY KEY (`uid`,`cid`) |
 
@@ -158,7 +161,7 @@ Alle `ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_unicode_ci` (Kit `conventi
 | `showthread_quickreply` | `{$captcha}` | `{$contentnotes_quickreply}{$captcha}` (eigene Tabellenzeile `<tr>` vor der Captcha-Zeile) |
 | `usercp_nav_misc` | Entwürfe-Zeile (`<tr>…usercp.php?action=drafts…{$draftcount}…</tr>`) | Anker + fertig gebackene Menüzeile mit Inline-SVG-Icon (Kit `debugging.md` Punkt 20) |
 | `showthread` | `<div id="posts">` (liegt in `<td id="posts_container">`) | `{$contentnotes_thread_banner}<div id="posts"{$contentnotes_posts_attr}>` – Banner steht in derselben Tabellenzelle direkt über den Posts; `$contentnotes_posts_attr` ist leer oder ` class="contentnotes_veiled" data-contentnotes-veil="thread"` |
-| `forumdisplay_thread`, `search_results_threads_thread` | `{$thread['multipage']}` (steht direkt hinter dem Betreff-Link) | `{$thread['contentnotes_badge']}{$thread['multipage']}` |
+| `forumdisplay_thread`, `search_results_threads_thread` | `<span>{$prefix} {$gotounread}` (erstes Kind im Titel-`<div>`, davor ist Platz für eine eigene Zeile) | `{$thread['contentnotes_badge']}<span>{$prefix} {$gotounread}` – das Label steht in einer eigenen Zeile **vor** dem Titel; die frühere Position (hinter `{$thread['multipage']}`) wird über `contentnotes_legacy_template_injections()` beim Zurückbauen mit entfernt |
 
 Guard-String/Entfernen per `find_replace_templatesets()` mit exaktem Gegen-Regex in
 `deactivate()`. Debugging-Punkte 17 und 18 beachten.
