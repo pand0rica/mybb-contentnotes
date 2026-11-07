@@ -256,9 +256,23 @@ function contentnotes_template_injections(): array
         ['editpost', '{$posticons}', '{$posticons}{$contentnotes_form}'],
         ['showthread_quickreply', '{$captcha}', '{$contentnotes_quickreply}{$captcha}'],
         ['showthread', '<div id="posts">', '{$contentnotes_thread_banner}<div id="posts"{$contentnotes_posts_attr}>'],
+        ['forumdisplay_thread', '<span>{$prefix} {$gotounread}', '{$thread[\'contentnotes_badge\']}<span>{$prefix} {$gotounread}'],
+        ['search_results_threads_thread', '<span>{$prefix} {$gotounread}', '{$thread[\'contentnotes_badge\']}<span>{$prefix} {$gotounread}'],
+        ['usercp_nav_misc', contentnotes_usercp_nav_anchor(), contentnotes_usercp_nav_anchor() . contentnotes_usercp_nav_row()],
+    ];
+}
+
+/**
+ * Frühere Injektionen (Label hinter dem Threadtitel, 1.0.0/1.1.0 bis zur Umstellung): werden beim
+ * Zurückbauen mit entfernt, damit nach einem Update nichts doppelt im Template steht.
+ *
+ * @return array
+ */
+function contentnotes_legacy_template_injections(): array
+{
+    return [
         ['forumdisplay_thread', '{$thread[\'multipage\']}', '{$thread[\'contentnotes_badge\']}{$thread[\'multipage\']}'],
         ['search_results_threads_thread', '{$thread[\'multipage\']}', '{$thread[\'contentnotes_badge\']}{$thread[\'multipage\']}'],
-        ['usercp_nav_misc', contentnotes_usercp_nav_anchor(), contentnotes_usercp_nav_anchor() . contentnotes_usercp_nav_row()],
     ];
 }
 
@@ -289,7 +303,7 @@ function contentnotes_uninstall_template_injections(): void
 {
     require_once MYBB_ROOT . 'inc/adminfunctions_templates.php';
 
-    foreach (contentnotes_template_injections() as $injection) {
+    foreach (array_merge(contentnotes_template_injections(), contentnotes_legacy_template_injections()) as $injection) {
         list($title, $find, $replace) = $injection;
         // Autocreate aus: es werden nur bereits veränderte Templates zurückgebaut.
         find_replace_templatesets($title, '#' . preg_quote($replace, '#') . '#', $find, 0);
