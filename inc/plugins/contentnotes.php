@@ -258,7 +258,6 @@ function contentnotes_template_injections(): array
         ['showthread', '<div id="posts">', '{$contentnotes_thread_banner}<div id="posts"{$contentnotes_posts_attr}>'],
         ['forumdisplay_thread', '<span>{$prefix} {$gotounread}', '{$thread[\'contentnotes_badge\']}<span>{$prefix} {$gotounread}'],
         ['search_results_threads_thread', '<span>{$prefix} {$gotounread}', '{$thread[\'contentnotes_badge\']}<span>{$prefix} {$gotounread}'],
-        ['usercp_nav_misc', contentnotes_usercp_nav_anchor(), contentnotes_usercp_nav_anchor() . contentnotes_usercp_nav_row()],
     ];
 }
 
@@ -273,7 +272,60 @@ function contentnotes_legacy_template_injections(): array
     return [
         ['forumdisplay_thread', '{$thread[\'multipage\']}', '{$thread[\'contentnotes_badge\']}{$thread[\'multipage\']}'],
         ['search_results_threads_thread', '{$thread[\'multipage\']}', '{$thread[\'contentnotes_badge\']}{$thread[\'multipage\']}'],
+        // h4w: der Menüpunkt steht nicht mehr in „Sonstiges“, sondern in der RPG-Kategorie (siehe contentnotes_h4w_*)
+        ['usercp_nav_misc', contentnotes_usercp_nav_anchor(), contentnotes_usercp_nav_anchor() . contentnotes_usercp_nav_row()],
     ];
+}
+
+/**
+ * h4w: Menüzeile für die RPG-Kategorie im UserCP (Master-Template usercp_nav_rpg_user, nur User-Accounts).
+ * Byte-gleich mit der Zeile in mybb-stylekit/templates-master/usercp_nav_rpg_user.html; endet mit der Markierung
+ * <!--contentnotes_nav-->, damit sie beim Aktivieren erst entfernt und dann neu gesetzt wird (kein Duplikat).
+ *
+ * @return string
+ */
+function contentnotes_h4w_nav_row(): string
+{
+    return '<tr><td class="trow1 smalltext"><a href="usercp.php?action=contentnotes" class="usercp_nav_item usercp_nav_contentnotes" style="padding-left: 0;">'
+        . '<svg class="usercp_nav_icon" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" aria-hidden="true" style="vertical-align: -3px; margin-right: 6px;">'
+        . '<path d="M8 1.8 14.6 13.4H1.4z" stroke-width="1.3" stroke-linejoin="round"/><path d="M8 6.2v3.4" stroke-width="1.3" stroke-linecap="round"/>'
+        . '<circle cx="8" cy="11.4" r=".7" fill="currentColor" stroke="none"/></svg>'
+        . '{$lang->contentnotes_usercp_menu_item}</a></td></tr><!--contentnotes_nav-->';
+}
+
+/**
+ * h4w: Zeile aus dem Master-Template usercp_nav_rpg_user entfernen (inkl. Einrückung und Zeilenumbruch).
+ *
+ * @return void
+ */
+function contentnotes_h4w_remove_nav_row(): void
+{
+    require_once MYBB_ROOT . 'inc/adminfunctions_templates.php';
+
+    find_replace_templatesets(
+        'usercp_nav_rpg_user',
+        '#[ \t]*<tr><td class="trow1 smalltext"><a href="usercp\.php\?action=contentnotes".*?</tr><!--contentnotes_nav-->\r?\n?#s',
+        '',
+        0
+    );
+}
+
+/**
+ * h4w: Zeile vor {$usercp_nav_rpg_custom} in usercp_nav_rpg_user einsetzen (erst entfernen, dann setzen).
+ *
+ * @return void
+ */
+function contentnotes_h4w_install_nav_row(): void
+{
+    require_once MYBB_ROOT . 'inc/adminfunctions_templates.php';
+
+    contentnotes_h4w_remove_nav_row();
+    find_replace_templatesets(
+        'usercp_nav_rpg_user',
+        '#\{\$usercp_nav_rpg_custom\}#',
+        contentnotes_h4w_nav_row() . "\n    {\$usercp_nav_rpg_custom}",
+        0
+    );
 }
 
 /**
@@ -292,6 +344,9 @@ function contentnotes_install_template_injections(): void
         list($title, $find, $replace) = $injection;
         find_replace_templatesets($title, '#' . preg_quote($find, '#') . '#', $replace);
     }
+
+    // h4w: Menüzeile in der RPG-Kategorie (nur User-Accounts)
+    contentnotes_h4w_install_nav_row();
 }
 
 /**
@@ -308,6 +363,8 @@ function contentnotes_uninstall_template_injections(): void
         // Autocreate aus: es werden nur bereits veränderte Templates zurückgebaut.
         find_replace_templatesets($title, '#' . preg_quote($replace, '#') . '#', $find, 0);
     }
+
+    contentnotes_h4w_remove_nav_row();
 }
 
 /**
